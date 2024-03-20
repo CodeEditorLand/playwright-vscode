@@ -1,164 +1,167 @@
 {
-  "name": "playwright",
-  "displayName": "Playwright Test for VSCode",
-  "description": "%description%",
-  "icon": "images/playwright-logo.png",
-  "version": "1.0.22",
-  "publisher": "ms-playwright",
-  "repository": "https://github.com/microsoft/playwright-vscode",
-  "bugs": {
-    "url": "https://github.com/microsoft/playwright-vscode/issues"
-  },
-  "engines": {
-    "vscode": "^1.86.0"
-  },
-  "categories": [
-    "Testing"
-  ],
-  "activationEvents": [
-    "workspaceContains:**/*playwright*.config.{ts,js,mjs}",
-    "onCommand:pw.extension.install"
-  ],
-  "main": "./out/extension.js",
-  "l10n": "./l10n",
-  "contributes": {
-    "commands": [
-      {
-        "category": "Test",
-        "command": "pw.extension.install",
-        "title": "%contributes.command.pw.extension.install%"
-      },
-      {
-        "category": "Test",
-        "command": "pw.extension.installBrowsers",
-        "title": "%contributes.command.pw.extension.installBrowsers%"
-      },
-      {
-        "category": "Test",
-        "command": "pw.extension.command.inspect",
-        "title": "%contributes.command.pw.extension.command.inspect%"
-      },
-      {
-        "category": "Test",
-        "command": "pw.extension.command.closeBrowsers",
-        "title": "%contributes.command.pw.extension.command.closeBrowsers%"
-      },
-      {
-        "category": "Test",
-        "icon": "$(record)",
-        "command": "pw.extension.command.recordNew",
-        "title": "%contributes.command.pw.extension.command.recordNew%"
-      },
-      {
-        "category": "Test",
-        "icon": "$(record)",
-        "command": "pw.extension.command.recordAtCursor",
-        "title": "%contributes.command.pw.extension.command.recordAtCursor%"
-      },
-      {
-        "category": "Test",
-        "icon": "$(gear)",
-        "command": "pw.extension.command.toggleModels",
-        "title": "%contributes.command.pw.extension.command.toggleModels%"
-      },
-      {
-        "category": "Test",
-        "command": "pw.extension.toggle.reuseBrowser",
-        "title": "%contributes.command.pw.extension.toggle.reuseBrowser%"
-      },
-      {
-        "category": "Test",
-        "command": "pw.extension.toggle.showTrace",
-        "title": "%contributes.command.pw.extension.toggle.showTrace%"
-      }
-    ],
-    "configuration": {
-      "title": "Playwright",
-      "properties": {
-        "playwright.env": {
-          "type": "object",
-          "default": {},
-          "description": "%configuration.playwright.env%"
-        },
-        "playwright.reuseBrowser": {
-          "type": "boolean",
-          "default": false,
-          "description": "%configuration.playwright.reuseBrowser%"
-        },
-        "playwright.showTrace": {
-          "type": "boolean",
-          "default": false,
-          "description": "%configuration.playwright.showTrace%"
-        },
-        "playwright.useTestServer": {
-          "type": "boolean",
-          "default": false
-        },
-        "playwright.allowWatchingFiles": {
-          "type": "boolean",
-          "default": false
-        },
-        "playwright.workspaceSettings": {
-          "type": "object",
-          "default": {}
-        }
-      }
-    },
-    "views": {
-      "test": [
-        {
-          "type": "webview",
-          "id": "pw.extension.settingsView",
-          "name": "%views.test.pw.extension.settingsView%"
-        }
-      ]
-    }
-  },
-  "scripts": {
-    "esbuild": "esbuild ./src/babelBundle.ts ./src/extension.ts ./src/oopReporter.ts ./src/debugTransform.ts  ./src/playwrightFinder.ts --bundle --outdir=out --external:vscode --external:./babelBundle --external:./debugTransform --external:./oopReporter --external:./playwrightFinder --format=cjs --platform=node --target=ES2019",
-    "build": "npm run esbuild -- --minify",
-    "watch": "npm run esbuild -- --sourcemap --watch",
-    "l10n": "npx @vscode/l10n-dev export -o ./l10n ./src",
-    "vscode:prepublish": "npm run build",
-    "lint": "tsc && eslint . --ext .ts,.tsx,.js",
-    "test": "playwright test --project=cli --project=cli-reuse",
-    "test-all": "playwright test",
-    "package": "vsce package",
-    "code": "code --uninstall-extension ms-playwright.playwright && code --install-extension playwright-0.2.11.vsix",
-    "uncode": "code --uninstall-extension ms-playwright.playwright",
-    "code-insiders": "code-insiders --uninstall-extension ms-playwright.playwright && code-insiders --install-extension playwright-0.2.11.vsix",
-    "uncode-insiders": "code-insiders --uninstall-extension ms-playwright.playwright"
-  },
-  "devDependencies": {
-    "@babel/preset-typescript": "^7.23.2",
-    "@playwright/test": "1.42.1-beta-1709332975000",
-    "@types/babel__core": "^7.20.3",
-    "@types/babel__helper-plugin-utils": "^7.10.2",
-    "@types/babel__traverse": "^7.20.3",
-    "@types/glob": "^8.0.0",
-    "@types/node": "^18.11.9",
-    "@types/stack-utils": "^2.0.1",
-    "@types/vscode": "1.86.0",
-    "@types/which": "^3.0.3",
-    "@types/ws": "^8.5.3",
-    "@typescript-eslint/eslint-plugin": "^5.44.0",
-    "@typescript-eslint/parser": "^5.44.0",
-    "@vscode/l10n-dev": "^0.0.24",
-    "@vscode/vsce": "^2.24.0",
-    "esbuild": "^0.15.15",
-    "eslint": "^8.28.0",
-    "eslint-plugin-notice": "^0.9.10",
-    "eslint-plugin-react-hooks": "^4.6.0",
-    "glob": "^8.0.3",
-    "typescript": "^4.9.3"
-  },
-  "dependencies": {
-    "@babel/core": "^7.23.2",
-    "@babel/helper-plugin-utils": "^7.22.5",
-    "@babel/parser": "^7.23.0",
-    "@babel/traverse": "^7.23.2",
-    "stack-utils": "^2.0.6",
-    "which": "^4.0.0",
-    "ws": "^8.11.0"
-  }
+	"name": "playwright",
+	"displayName": "Playwright Test for VSCode",
+	"version": "0.0.1",
+	"private": false,
+	"description": "%description%",
+	"homepage": "https://github.com/CodeEditorLand/Foundation#readme",
+	"bugs": {
+		"url": "https://github.com/CodeEditorLand/Foundation/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/CodeEditorLand/Foundation.git"
+	},
+	"license": "SEE LICENSE IN LICENSE",
+	"author": {
+		"name": "Playform",
+		"email": "Hello@Playform.Cloud",
+		"url": "https://playform.cloud"
+	},
+	"type": "module",
+	"main": "./out/extension.js",
+	"scripts": {
+		"build": "npm run esbuild -- --minify",
+		"code": "code --uninstall-extension ms-playwright.playwright && code --install-extension playwright-0.2.11.vsix",
+		"code-insiders": "code-insiders --uninstall-extension ms-playwright.playwright && code-insiders --install-extension playwright-0.2.11.vsix",
+		"esbuild": "esbuild ./src/babelBundle.ts ./src/extension.ts ./src/oopReporter.ts ./src/debugTransform.ts  ./src/playwrightFinder.ts --bundle --outdir=out --external:vscode --external:./babelBundle --external:./debugTransform --external:./oopReporter --external:./playwrightFinder --format=cjs --platform=node --target=ES2019",
+		"l10n": "npx @vscode/l10n-dev export -o ./l10n ./src",
+		"package": "vsce package",
+		"prepublishOnly": "TypeScriptESBuild 'Source/**/*.ts'",
+		"test-all": "playwright test",
+		"uncode": "code --uninstall-extension ms-playwright.playwright",
+		"uncode-insiders": "code-insiders --uninstall-extension ms-playwright.playwright",
+		"vscode:prepublish": "npm run build",
+		"watch": "npm run esbuild -- --sourcemap --watch"
+	},
+	"contributes": {
+		"commands": [
+			{
+				"category": "Test",
+				"command": "pw.extension.install",
+				"title": "%contributes.command.pw.extension.install%"
+			},
+			{
+				"category": "Test",
+				"command": "pw.extension.installBrowsers",
+				"title": "%contributes.command.pw.extension.installBrowsers%"
+			},
+			{
+				"category": "Test",
+				"command": "pw.extension.command.inspect",
+				"title": "%contributes.command.pw.extension.command.inspect%"
+			},
+			{
+				"category": "Test",
+				"command": "pw.extension.command.closeBrowsers",
+				"title": "%contributes.command.pw.extension.command.closeBrowsers%"
+			},
+			{
+				"category": "Test",
+				"command": "pw.extension.command.recordNew",
+				"icon": "$(record)",
+				"title": "%contributes.command.pw.extension.command.recordNew%"
+			},
+			{
+				"category": "Test",
+				"command": "pw.extension.command.recordAtCursor",
+				"icon": "$(record)",
+				"title": "%contributes.command.pw.extension.command.recordAtCursor%"
+			},
+			{
+				"category": "Test",
+				"command": "pw.extension.command.toggleModels",
+				"icon": "$(gear)",
+				"title": "%contributes.command.pw.extension.command.toggleModels%"
+			},
+			{
+				"category": "Test",
+				"command": "pw.extension.toggle.reuseBrowser",
+				"title": "%contributes.command.pw.extension.toggle.reuseBrowser%"
+			},
+			{
+				"category": "Test",
+				"command": "pw.extension.toggle.showTrace",
+				"title": "%contributes.command.pw.extension.toggle.showTrace%"
+			}
+		],
+		"configuration": {
+			"properties": {
+				"playwright.allowWatchingFiles": {
+					"default": false,
+					"type": "boolean"
+				},
+				"playwright.env": {
+					"default": {},
+					"description": "%configuration.playwright.env%",
+					"type": "object"
+				},
+				"playwright.reuseBrowser": {
+					"default": false,
+					"description": "%configuration.playwright.reuseBrowser%",
+					"type": "boolean"
+				},
+				"playwright.showTrace": {
+					"default": false,
+					"description": "%configuration.playwright.showTrace%",
+					"type": "boolean"
+				},
+				"playwright.useTestServer": {
+					"default": false,
+					"type": "boolean"
+				},
+				"playwright.workspaceSettings": {
+					"default": {},
+					"type": "object"
+				}
+			},
+			"title": "Playwright"
+		},
+		"views": {
+			"test": [
+				{
+					"id": "pw.extension.settingsView",
+					"name": "%views.test.pw.extension.settingsView%",
+					"type": "webview"
+				}
+			]
+		}
+	},
+	"activationEvents": [
+		"workspaceContains:**/*playwright*.config.{ts,js,mjs}",
+		"onCommand:pw.extension.install"
+	],
+	"dependencies": {
+		"@babel/core": "^7.23.2",
+		"@babel/helper-plugin-utils": "^7.22.5",
+		"@babel/parser": "^7.23.0",
+		"@babel/traverse": "^7.23.2",
+		"stack-utils": "^2.0.6",
+		"which": "^4.0.0",
+		"ws": "^8.11.0"
+	},
+	"devDependencies": {
+		"@babel/preset-typescript": "^7.23.2",
+		"@playwright/test": "1.42.1-beta-1709332975000",
+		"@types/babel__core": "^7.20.3",
+		"@types/babel__helper-plugin-utils": "^7.10.2",
+		"@types/babel__traverse": "^7.20.3",
+		"@types/glob": "^8.0.0",
+		"@types/node": "^18.11.9",
+		"@types/stack-utils": "^2.0.1",
+		"@types/vscode": "1.86.0",
+		"@types/which": "^3.0.3",
+		"@types/ws": "^8.5.3",
+		"@vscode/l10n-dev": "^0.0.24",
+		"@vscode/vsce": "^2.24.0",
+		"esbuild": "^0.15.15",
+		"glob": "^8.0.3",
+		"typescript": "^4.9.3",
+		"typescript-esbuild": "latest"
+	},
+	"publishConfig": {
+		"access": "public"
+	},
+	"icon": "images/playwright-logo.png",
+	"l10n": "./l10n"
 }
