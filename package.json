@@ -157,7 +157,7 @@
 		"esbuild": "^0.15.15",
 		"glob": "^8.0.3",
 		"typescript": "^4.9.3",
-		"typescript-esbuild": "latest"
+		"typescript-esbuild": "0.4.5"
 	},
 	"publishConfig": {
 		"access": "public"
