@@ -154,20 +154,20 @@
 		"onCommand:pw.extension.install"
 	],
 	"dependencies": {
-		"stack-utils": "^2.0.6",
-		"which": "^4.0.0",
-		"ws": "^8.11.0"
+		"stack-utils": "2.0.6",
+		"which": "4.0.0",
+		"ws": "8.17.0"
 	},
 	"devDependencies": {
 		"@playform/build": "0.0.7",
 		"@playform/document": "0.0.6",
-		"@types/glob": "^8.0.0",
-		"@types/node": "^18.11.9",
-		"@types/stack-utils": "^2.0.1",
-		"@types/which": "^3.0.3",
-		"@types/ws": "^8.5.3",
-		"esbuild": "^0.15.15",
-		"glob": "^8.0.3"
+		"@types/glob": "8.1.0",
+		"@types/node": "20.12.7",
+		"@types/stack-utils": "2.0.3",
+		"@types/which": "3.0.3",
+		"@types/ws": "8.5.10",
+		"esbuild": "0.20.2",
+		"glob": "10.3.12"
 	},
 	"publishConfig": {
 		"access": "public"
