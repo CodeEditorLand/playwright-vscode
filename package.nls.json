@@ -1,0 +1,22 @@
+{
+  "description": "Run Playwright Test tests in Visual Studio Code.",
+  "contributes.command.pw.extension.install": "Install Playwright",
+  "contributes.command.pw.extension.installBrowsers": "Install Playwright Browsers",
+  "contributes.command.pw.extension.command.inspect": "Pick locator",
+  "contributes.command.pw.extension.command.clearCache": "Clear cache",
+  "contributes.command.pw.extension.command.closeBrowsers": "Close all Playwright browsers",
+  "contributes.command.pw.extension.command.recordNew": "Record new",
+  "contributes.command.pw.extension.command.recordAtCursor": "Record at cursor",
+  "contributes.command.pw.extension.command.runGlobalSetup": "Run global setup",
+  "contributes.command.pw.extension.command.runGlobalTeardown": "Run global teardown",
+  "contributes.command.pw.extension.command.startDevServer": "Start dev server",
+  "contributes.command.pw.extension.command.stopDevServer": "Stop dev server",
+  "contributes.command.pw.extension.command.toggleModels": "Toggle Playwright configs",
+  "contributes.command.pw.extension.toggle.reuseBrowser": "Toggle Playwright browser reuse",
+  "contributes.command.pw.extension.toggle.showTrace": "Toggle Playwright Trace Viewer",
+  "configuration.playwright.env": "Environment variables to pass to Playwright Test.",
+  "configuration.playwright.reuseBrowser": "Show & reuse browser between tests.",
+  "configuration.playwright.showTrace": "Show Trace Viewer.",
+  "views.test.pw.extension.settingsView": "Playwright",
+  "views.test.pw.extension.projectsView": "Playwright Projects"
+}
