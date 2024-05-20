@@ -1,10 +1,6 @@
 {
-	"name": "tests-integration",
-	"scripts": {
-		"Document": "Document 'Source/**/*.ts'",
-		"prepublishOnly": "Build 'Source/**/*.ts'"
-	},
-	"devDependencies": {
-		"@playform/build": "0.0.7"
-	}
+  "name": "tests-integration",
+  "devDependencies": {
+    "@vscode/test-electron": "^2.3.8"
+  }
 }
