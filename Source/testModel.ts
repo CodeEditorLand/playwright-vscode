@@ -20,6 +20,7 @@ import { resolveSourceMap } from './utils';
 import { ConfigListFilesReport, ProjectConfigWithFiles } from './listTests';
 import * as reporterTypes from './upstream/reporter';
 import { TeleSuite } from './upstream/teleReceiver';
+import { workspaceStateKey } from './settingsModel';
 import type { SettingsModel, WorkspaceSettings } from './settingsModel';
 import path from 'path';
 import { DisposableBase } from './disposableBase';
@@ -83,7 +84,7 @@ export class TestModel {
     this._vscode = vscode;
     this._options = options;
     this.config = { ...playwrightInfo, workspaceFolder, configFile };
-    this._useLegacyCLIDriver = playwrightInfo.version < 1.43;
+    this._useLegacyCLIDriver = playwrightInfo.version < 1.44;
     this._playwrightTest =  this._useLegacyCLIDriver ? new PlaywrightTestCLI(vscode, this, options) : new PlaywrightTestServer(vscode, this, options);
     this._didUpdate = new vscode.EventEmitter();
     this.onUpdated = this._didUpdate.event;
@@ -468,19 +469,24 @@ export class TestModel {
     const showBrowser = this._options.settingsModel.showBrowser.get() && !!externalOptions.connectWsEndpoint;
 
     let trace: 'on' | 'off' | undefined;
+    let video: 'on' | 'off' | undefined;
+
     if (this._options.settingsModel.showTrace.get())
       trace = 'on';
     // "Show browser" mode forces context reuse that survives over multiple test runs.
     // Playwright Test sets up `tracesDir` inside the `test-results` folder, so it will be removed between runs.
     // When context is reused, its ongoing tracing will fail with ENOENT because trace files
     // were suddenly removed. So we disable tracing in this case.
-    if (this._options.settingsModel.showBrowser.get())
+    if (this._options.settingsModel.showBrowser.get()) {
       trace = 'off';
+      video = 'off';
+    }
 
     const options: PlaywrightTestRunOptions = {
       headed: showBrowser && !this._options.isUnderTest,
       workers: showBrowser ? 1 : undefined,
       trace,
+      video,
       reuseContext: showBrowser,
       connectWsEndpoint: showBrowser ? externalOptions.connectWsEndpoint : undefined,
     };
@@ -501,6 +507,7 @@ export class TestModel {
     const options: PlaywrightTestRunOptions = {
       headed: !this._options.isUnderTest,
       workers: 1,
+      video: 'off',
       trace: 'off',
       reuseContext: false,
       connectWsEndpoint: externalOptions.connectWsEndpoint,
@@ -588,11 +595,11 @@ export class TestModelCollection extends DisposableBase {
   private _selectedConfigFile: string | undefined;
   private _didUpdate: vscodeTypes.EventEmitter<void>;
   readonly onUpdated: vscodeTypes.Event<void>;
-  private _settingsModel: SettingsModel;
+  private _context: vscodeTypes.ExtensionContext;
 
-  constructor(vscode: vscodeTypes.VSCode, settingsModel: SettingsModel) {
+  constructor(vscode: vscodeTypes.VSCode, context: vscodeTypes.ExtensionContext) {
     super();
-    this._settingsModel = settingsModel;
+    this._context = context;
     this._didUpdate = new vscode.EventEmitter();
     this.onUpdated = this._didUpdate.event;
   }
@@ -635,7 +642,7 @@ export class TestModelCollection extends DisposableBase {
 
   async addModel(model: TestModel) {
     this._models.push(model);
-    const workspaceSettings = this._settingsModel.workspaceSettings.get();
+    const workspaceSettings = this._context.workspaceState.get(workspaceStateKey) as WorkspaceSettings || {};
     const configSettings = (workspaceSettings.configs || []).find(c => c.relativeConfigFile === path.relative(model.config.workspaceFolder, model.config.configFile));
     model.isEnabled = configSettings?.enabled || (this._models.length === 1 && !configSettings);
     await this._loadModelIfNeeded(model);
@@ -652,7 +659,7 @@ export class TestModelCollection extends DisposableBase {
     if (!model.isEnabled)
       return;
     await model._listFiles();
-    const workspaceSettings = this._settingsModel.workspaceSettings.get();
+    const workspaceSettings = this._context.workspaceState.get(workspaceStateKey) as WorkspaceSettings || {};
     const configSettings = (workspaceSettings.configs || []).find(c => c.relativeConfigFile === path.relative(model.config.workspaceFolder, model.config.configFile));
     if (configSettings) {
       let firstProject = true;
@@ -727,7 +734,7 @@ export class TestModelCollection extends DisposableBase {
         projects: model.projects().map(p => ({ name: p.name, enabled: p.isEnabled })),
       });
     }
-    this._settingsModel.workspaceSettings.set(workspaceSettings);
+    this._context.workspaceState.update(workspaceStateKey, workspaceSettings);
   }
 }
 
