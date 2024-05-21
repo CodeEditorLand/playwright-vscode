@@ -123,18 +123,18 @@
 		"onCommand:pw.extension.install"
 	],
 	"dependencies": {
-		"stack-utils": "^2.0.6",
-		"which": "^4.0.0",
-		"ws": "^8.11.0"
+		"stack-utils": "2.0.6",
+		"which": "4.0.0",
+		"ws": "8.11.0"
 	},
 	"devDependencies": {
-		"@types/glob": "^8.0.0",
-		"@types/node": "^18.11.9",
-		"@types/stack-utils": "^2.0.1",
-		"@types/which": "^3.0.3",
-		"@types/ws": "^8.5.3",
-		"esbuild": "^0.15.15",
-		"glob": "^8.0.3"
+		"@types/glob": "8.0.0",
+		"@types/node": "18.11.9",
+		"@types/stack-utils": "2.0.1",
+		"@types/which": "3.0.3",
+		"@types/ws": "8.5.3",
+		"esbuild": "0.15.15",
+		"glob": "8.0.3"
 	},
 	"icon": "images/playwright-logo.png",
 	"l10n": "./l10n"
