@@ -1,7 +1,6 @@
 out/
 .vscode-test/
 *.vsix
-.DS_Store
 test-results/
 playwright-report/
 vscode.d.ts
