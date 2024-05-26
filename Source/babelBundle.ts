@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-export { types as t } from '@babel/core';
-import { parse } from '@babel/parser';
+export { types as t } from "@babel/core";
+import { parse } from "@babel/parser";
 export { parse };
 export type ParseResult = ReturnType<typeof parse>;
-import traverseFunc from '@babel/traverse';
+import traverseFunc from "@babel/traverse";
 export const traverse = traverseFunc;
-export type { SourceLocation } from '@babel/types';
-export { declare } from '@babel/helper-plugin-utils';
+export type { SourceLocation } from "@babel/types";
+export { declare } from "@babel/helper-plugin-utils";

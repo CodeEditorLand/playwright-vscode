@@ -14,72 +14,73 @@
  * limitations under the License.
  */
 
-import path from 'path';
-import * as vscodeTypes from './vscodeTypes';
+import path from "path";
+import type * as vscodeTypes from "./vscodeTypes";
 
 export type WorkspaceChange = {
-  created: Set<string>;
-  changed: Set<string>;
-  deleted: Set<string>;
+	created: Set<string>;
+	changed: Set<string>;
+	deleted: Set<string>;
 };
 
 export class WorkspaceObserver {
-  private _vscode: vscodeTypes.VSCode;
-  private _fileSystemWatchers: vscodeTypes.FileSystemWatcher[] = [];
-  private _handler: (change: WorkspaceChange) => void;
-  private _pendingChange: WorkspaceChange | undefined;
-  private _timeout: NodeJS.Timeout | undefined;
+	private _vscode: vscodeTypes.VSCode;
+	private _fileSystemWatchers: vscodeTypes.FileSystemWatcher[] = [];
+	private _handler: (change: WorkspaceChange) => void;
+	private _pendingChange: WorkspaceChange | undefined;
+	private _timeout: NodeJS.Timeout | undefined;
 
-  constructor(vscode: vscodeTypes.VSCode, handler: (change: WorkspaceChange) => void) {
-    this._vscode = vscode;
-    this._handler = handler;
-  }
+	constructor(
+		vscode: vscodeTypes.VSCode,
+		handler: (change: WorkspaceChange) => void,
+	) {
+		this._vscode = vscode;
+		this._handler = handler;
+	}
 
-  addWatchFolder(folder: string) {
-    const fileSystemWatcher = this._vscode.workspace.createFileSystemWatcher(folder + path.sep + '**');
-    fileSystemWatcher.onDidCreate(uri => {
-      if (uri.scheme === 'file')
-        this._change().created.add(uri.fsPath);
-    });
-    fileSystemWatcher.onDidChange(uri => {
-      if (uri.scheme === 'file')
-        this._change().changed.add(uri.fsPath);
-    });
-    fileSystemWatcher.onDidDelete(uri => {
-      if (uri.scheme === 'file')
-        this._change().deleted.add(uri.fsPath);
-    });
-    this._fileSystemWatchers.push(fileSystemWatcher);
-  }
+	addWatchFolder(folder: string) {
+		const fileSystemWatcher =
+			this._vscode.workspace.createFileSystemWatcher(
+				folder + path.sep + "**",
+			);
+		fileSystemWatcher.onDidCreate((uri) => {
+			if (uri.scheme === "file") this._change().created.add(uri.fsPath);
+		});
+		fileSystemWatcher.onDidChange((uri) => {
+			if (uri.scheme === "file") this._change().changed.add(uri.fsPath);
+		});
+		fileSystemWatcher.onDidDelete((uri) => {
+			if (uri.scheme === "file") this._change().deleted.add(uri.fsPath);
+		});
+		this._fileSystemWatchers.push(fileSystemWatcher);
+	}
 
-  private _change(): WorkspaceChange {
-    if (!this._pendingChange) {
-      this._pendingChange = {
-        created: new Set(),
-        changed: new Set(),
-        deleted: new Set()
-      };
-    }
-    if (this._timeout)
-      clearTimeout(this._timeout);
-    this._timeout = setTimeout(() => this._reportChange(), 50);
-    return this._pendingChange;
-  }
+	private _change(): WorkspaceChange {
+		if (!this._pendingChange) {
+			this._pendingChange = {
+				created: new Set(),
+				changed: new Set(),
+				deleted: new Set(),
+			};
+		}
+		if (this._timeout) clearTimeout(this._timeout);
+		this._timeout = setTimeout(() => this._reportChange(), 50);
+		return this._pendingChange;
+	}
 
-  private _reportChange() {
-    delete this._timeout;
-    this._handler(this._pendingChange!);
-    this._pendingChange = undefined;
-  }
+	private _reportChange() {
+		delete this._timeout;
+		this._handler(this._pendingChange!);
+		this._pendingChange = undefined;
+	}
 
-  dispose() {
-    this.reset();
-  }
+	dispose() {
+		this.reset();
+	}
 
-  reset() {
-    if (this._timeout)
-      clearTimeout(this._timeout);
-    this._fileSystemWatchers.forEach(f => f.dispose());
-    this._fileSystemWatchers = [];
-  }
+	reset() {
+		if (this._timeout) clearTimeout(this._timeout);
+		this._fileSystemWatchers.forEach((f) => f.dispose());
+		this._fileSystemWatchers = [];
+	}
 }
