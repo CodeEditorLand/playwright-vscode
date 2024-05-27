@@ -13,23 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { defineConfig } from "@playwright/test";
-import type { TestOptions } from "./tests/baseTest";
+import { defineConfig } from '@playwright/test';
+import { TestOptions } from './tests/baseTest';
 
 export default defineConfig<void, TestOptions>({
-	reporter: process.env.CI ? "html" : "list",
-	timeout: 120_000,
-	workers: 1,
-	expect: {
-		timeout: 30_000,
-	},
-	globalSetup: "./globalSetup",
-	projects: [
-		{
-			name: "VSCode insiders",
-			use: {
-				vscodeVersion: "insiders",
-			},
-		},
-	],
+  reporter: process.env.CI ? 'html' : 'list',
+  timeout: 120_000,
+  workers: 1,
+  expect: {
+    timeout: 30_000,
+  },
+  globalSetup: './globalSetup',
+  projects: [
+    {
+      name: 'VSCode insiders',
+      use: {
+        vscodeVersion: 'insiders',
+      }
+    }
+  ]
 });
