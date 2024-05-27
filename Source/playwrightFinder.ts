@@ -14,44 +14,37 @@
  * limitations under the License.
  */
 
-const path = require("path");
+const path = require('path');
 
 const packages = [
-	"@playwright/test",
-	"playwright",
-	"@playwright/experimental-ct-react",
-	"@playwright/experimental-ct-react17",
-	"@playwright/experimental-ct-vue",
-	"@playwright/experimental-ct-vue2",
-	"@playwright/experimental-ct-solid",
-	"@playwright/experimental-ct-svelte",
+  '@playwright/test',
+  'playwright',
+  '@playwright/experimental-ct-react',
+  '@playwright/experimental-ct-react17',
+  '@playwright/experimental-ct-vue',
+  '@playwright/experimental-ct-vue2',
+  '@playwright/experimental-ct-solid',
+  '@playwright/experimental-ct-svelte',
 ];
 
 for (const packageName of packages) {
-	let packageJSONPath;
-	try {
-		packageJSONPath = require.resolve(
-			path.join(packageName, "package.json"),
-			{ paths: [process.cwd()] },
-		);
-	} catch (e) {
-		continue;
-	}
-	try {
-		const packageJSON = require(packageJSONPath);
-		const { version } = packageJSON;
-		const v = Number.parseFloat(version.replace(/-(next|beta)$/, ""));
-		const cli = path.join(packageJSONPath, "../cli.js");
-		console.log(JSON.stringify({ version: v, cli }, null, 2));
-		process.exit(0);
-	} catch (e) {
-		console.log(JSON.stringify({ error: String(e) }, null, 2));
-		process.exit(0);
-	}
+  let packageJSONPath;
+  try {
+    packageJSONPath = require.resolve(path.join(packageName, 'package.json'), { paths: [process.cwd()] });
+  } catch (e) {
+    continue;
+  }
+  try {
+    const packageJSON = require(packageJSONPath);
+    const { version } = packageJSON;
+    const v = parseFloat(version.replace(/-(next|beta)$/, ''));
+    const cli = path.join(packageJSONPath, '../cli.js');
+    console.log(JSON.stringify({ version: v, cli }, null, 2));
+    process.exit(0);
+  } catch (e) {
+    console.log(JSON.stringify({ error: String(e) }, null, 2));
+    process.exit(0);
+  }
 }
 
-console.log(
-	JSON.stringify({
-		error: "Playwright installation not found for " + process.cwd(),
-	}),
-);
+console.log(JSON.stringify({ error: 'Playwright installation not found for ' + process.cwd() }));
