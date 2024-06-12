@@ -109,19 +109,19 @@
 		}
 	},
 	"dependencies": {
-		"stack-utils": "^2.0.6",
-		"which": "^4.0.0",
-		"ws": "^8.17.0"
+		"stack-utils": "2.0.6",
+		"which": "4.0.0",
+		"ws": "8.17.0"
 	},
 	"description": "%description%",
 	"devDependencies": {
-		"@types/glob": "^8.1.0",
-		"@types/node": "^20.14.2",
-		"@types/stack-utils": "^2.0.3",
-		"@types/which": "^3.0.4",
-		"@types/ws": "^8.5.10",
-		"esbuild": "^0.21.5",
-		"glob": "^10.4.1"
+		"@types/glob": "8.1.0",
+		"@types/node": "20.14.2",
+		"@types/stack-utils": "2.0.3",
+		"@types/which": "3.0.4",
+		"@types/ws": "8.5.10",
+		"esbuild": "0.21.5",
+		"glob": "10.4.1"
 	},
 	"displayName": "Playwright Test for VSCode",
 	"icon": "images/playwright-logo.png",
