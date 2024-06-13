@@ -284,7 +284,7 @@ export class Extension implements RunHooks {
         continue;
       }
 
-      const minimumPlaywrightVersion = 1.28;
+      const minimumPlaywrightVersion = 1.38;
       if (playwrightInfo.version < minimumPlaywrightVersion) {
         if (userGesture) {
           this._vscode.window.showWarningMessage(
@@ -405,6 +405,8 @@ export class Extension implements RunHooks {
       for (const model of this._models.enabledModels()) {
         const result = model.narrowDownLocations(items);
         if (!result.testIds && !result.locations)
+          continue;
+        if (!model.enabledProjects().length)
           continue;
         await this._runTest(this._testRun, items, testItemForGlobalErrors, new Set(), model, mode === 'debug', enqueuedTests.length === 1);
       }
