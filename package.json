@@ -124,7 +124,7 @@
 	"dependencies": {
 		"stack-utils": "^2.0.6",
 		"which": "^4.0.0",
-		"ws": "^8.17.0"
+		"ws": "^8.17.1"
 	},
 	"devDependencies": {
 		"@types/glob": "^8.1.0",
