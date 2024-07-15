@@ -1,4 +1,4 @@
 {
-	"devDependencies": {},
-	"name": "tests-integration"
+	"name": "tests-integration",
+	"devDependencies": {}
 }
