@@ -14,117 +14,111 @@
  * limitations under the License.
  */
 
-import { ChildProcess, spawn } from "child_process";
-import type { TestConfig } from "./playwrightTestTypes";
-import { SettingsModel } from "./settingsModel";
-import { findNode } from "./utils";
-import * as vscodeTypes from "./vscodeTypes";
+import { ChildProcess, spawn } from 'child_process';
+import type { TestConfig } from './playwrightTestTypes';
+import { findNode } from './utils';
+import * as vscodeTypes from './vscodeTypes';
 
-export class TraceViewer implements vscodeTypes.Disposable {
-	private _vscode: vscodeTypes.VSCode;
-	private _envProvider: () => NodeJS.ProcessEnv;
-	private _disposables: vscodeTypes.Disposable[] = [];
-	private _traceViewerProcess: ChildProcess | undefined;
-	private _settingsModel: SettingsModel;
-	private _currentFile?: string;
+export type TraceViewer = SpawnTraceViewer;
 
-	constructor(
-		vscode: vscodeTypes.VSCode,
-		settingsModel: SettingsModel,
-		envProvider: () => NodeJS.ProcessEnv,
-	) {
-		this._vscode = vscode;
-		this._envProvider = envProvider;
-		this._settingsModel = settingsModel;
+export class SpawnTraceViewer {
+  private _vscode: vscodeTypes.VSCode;
+  private _envProvider: () => NodeJS.ProcessEnv;
+  private _traceViewerProcess: ChildProcess | undefined;
+  private _currentFile?: string;
+  private _config: TestConfig;
+  private _serverUrlPrefixForTest?: string;
 
-		this._disposables.push(
-			settingsModel.showTrace.onChange((value) => {
-				if (!value && this._traceViewerProcess)
-					this.close().catch(() => {});
-			}),
-		);
-	}
+  constructor(vscode: vscodeTypes.VSCode, envProvider: () => NodeJS.ProcessEnv, config: TestConfig) {
+    this._vscode = vscode;
+    this._envProvider = envProvider;
+    this._config = config;
+  }
 
-	currentFile() {
-		return this._currentFile;
-	}
+  isStarted() {
+    return !!this._traceViewerProcess;
+  }
 
-	async willRunTests(config: TestConfig) {
-		if (this._settingsModel.showTrace.get())
-			await this._startIfNeeded(config);
-	}
+  currentFile() {
+    return this._currentFile;
+  }
 
-	async open(file: string, config: TestConfig) {
-		if (!this._settingsModel.showTrace.get()) return;
-		if (!this._checkVersion(config)) return;
-		if (!file && !this._traceViewerProcess) return;
-		await this._startIfNeeded(config);
-		this._traceViewerProcess?.stdin?.write(file + "\n");
-		this._currentFile = file;
-	}
+  async willRunTests() {
+    await this._startIfNeeded();
+  }
 
-	dispose() {
-		this.close().catch(() => {});
-		for (const d of this._disposables) d.dispose();
-		this._disposables = [];
-	}
+  async open(file: string) {
+    await this._startIfNeeded();
+    this._traceViewerProcess?.stdin?.write(file + '\n');
+    this._currentFile = file;
+  }
 
-	private async _startIfNeeded(config: TestConfig) {
-		const node = await findNode(this._vscode, config.workspaceFolder);
-		if (this._traceViewerProcess) return;
-		const allArgs = [config.cli, "show-trace", `--stdin`];
-		if (this._vscode.env.remoteName) {
-			allArgs.push("--host", "0.0.0.0");
-			allArgs.push("--port", "0");
-		}
-		const traceViewerProcess = spawn(node, allArgs, {
-			cwd: config.workspaceFolder,
-			stdio: "pipe",
-			detached: true,
-			env: {
-				...process.env,
-				...this._envProvider(),
-			},
-		});
-		this._traceViewerProcess = traceViewerProcess;
+  private async _startIfNeeded() {
+    const node = await findNode(this._vscode, this._config.workspaceFolder);
+    if (this._traceViewerProcess)
+      return;
+    const allArgs = [this._config.cli, 'show-trace', `--stdin`];
+    if (this._vscode.env.remoteName) {
+      allArgs.push('--host', '0.0.0.0');
+      allArgs.push('--port', '0');
+    }
+    const traceViewerProcess = spawn(node, allArgs, {
+      cwd: this._config.workspaceFolder,
+      stdio: 'pipe',
+      detached: true,
+      env: {
+        ...process.env,
+        ...this._envProvider(),
+      },
+    });
+    this._traceViewerProcess = traceViewerProcess;
 
-		traceViewerProcess.stdout?.on("data", (data) =>
-			console.log(data.toString()),
-		);
-		traceViewerProcess.stderr?.on("data", (data) =>
-			console.log(data.toString()),
-		);
-		traceViewerProcess.on("exit", () => {
-			this._traceViewerProcess = undefined;
-			this._currentFile = undefined;
-		});
-		traceViewerProcess.on("error", (error) => {
-			this._vscode.window.showErrorMessage(error.message);
-			this.close().catch(() => {});
-		});
-	}
+    traceViewerProcess.stdout?.on('data', data => console.log(data.toString()));
+    traceViewerProcess.stderr?.on('data', data => console.log(data.toString()));
+    traceViewerProcess.on('exit', () => {
+      this._traceViewerProcess = undefined;
+      this._currentFile = undefined;
+    });
+    traceViewerProcess.on('error', error => {
+      this._vscode.window.showErrorMessage(error.message);
+      this.close();
+    });
+    if (this._vscode.isUnderTest) {
+      traceViewerProcess.stdout?.on('data', data => {
+        const match = data.toString().match(/Listening on (.*)/);
+        if (match)
+          this._serverUrlPrefixForTest = match[1];
+      });
+    }
+  }
 
-	private _checkVersion(
-		config: TestConfig,
-		message: string = this._vscode.l10n.t("this feature"),
-	): boolean {
-		const version = 1.35;
-		if (config.version < 1.35) {
-			this._vscode.window.showWarningMessage(
-				this._vscode.l10n.t(
-					"Playwright v{0}+ is required for {1} to work, v{2} found",
-					version,
-					message,
-					config.version,
-				),
-			);
-			return false;
-		}
-		return true;
-	}
+  checkVersion() {
+    const version = 1.35;
+    if (this._config.version < version) {
+      const message = this._vscode.l10n.t('this feature');
+      this._vscode.window.showWarningMessage(
+          this._vscode.l10n.t('Playwright v{0}+ is required for {1} to work, v{2} found', version, message, this._config.version)
+      );
+      return false;
+    }
+    return true;
+  }
 
-	async close() {
-		this._traceViewerProcess?.stdin?.end();
-		this._traceViewerProcess = undefined;
-	}
+  close() {
+    this._traceViewerProcess?.stdin?.end();
+    this._traceViewerProcess = undefined;
+    this._currentFile = undefined;
+    this._serverUrlPrefixForTest = undefined;
+  }
+
+  infoForTest() {
+    if (!this._serverUrlPrefixForTest)
+      return;
+    return {
+      type: 'spawn',
+      serverUrlPrefix: this._serverUrlPrefixForTest,
+      testConfigFile: this._config.configFile,
+      traceFile: this.currentFile(),
+    };
+  }
 }
