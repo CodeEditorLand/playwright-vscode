@@ -17,39 +17,46 @@ import { PlaywrightTestConfig } from "@playwright/test";
 import { WorkerOptions } from "./tests/utils";
 
 const config: PlaywrightTestConfig<WorkerOptions> = {
-	testDir: "./tests",
-	outputDir: "./test-results/inner",
-	fullyParallel: true,
-	forbidOnly: !!process.env.CI,
-	workers: process.env.CI ? 1 : undefined,
-	reporter: process.env.CI ? [["line"], ["blob"]] : [["line"]],
-	projects: [
-		{
-			name: "default",
-			use: {
-				showBrowser: false,
-			},
-		},
-		{
-			name: "default-reuse",
-			use: {
-				showBrowser: true,
-			},
-		},
-		{
-			name: "legacy",
-			use: {
-				overridePlaywrightVersion: 1.43,
-				showBrowser: false,
-			},
-		},
-		{
-			name: "legacy-reuse",
-			use: {
-				overridePlaywrightVersion: 1.43,
-				showBrowser: true,
-			},
-		},
-	],
+  testDir: './tests',
+  outputDir: './test-results/inner',
+  fullyParallel: true,
+  forbidOnly: !!process.env.CI,
+  workers: process.env.CI ? 1 : undefined,
+  reporter: process.env.CI ? [
+    ['line'],
+    ['blob'],
+  ] : [
+    ['line']
+  ],
+  projects: [
+    {
+      name: 'default',
+      use: {
+        showBrowser: false,
+        traceViewerMode: 'spawn',
+      }
+    },
+    {
+      name: 'default-reuse',
+      use: {
+        showBrowser: true,
+      }
+    },
+    {
+      name: 'legacy',
+      use: {
+        overridePlaywrightVersion: 1.43,
+        showBrowser: false,
+        traceViewerMode: 'spawn',
+      }
+    },
+    {
+      name: 'legacy-reuse',
+      use: {
+        overridePlaywrightVersion: 1.43,
+        showBrowser: true,
+      }
+    },
+  ]
 };
 export default config;
