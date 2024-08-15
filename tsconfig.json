@@ -1,15 +1,14 @@
 {
-	"compilerOptions": {
-		"module": "commonjs",
-		"target": "ES2019",
-		"lib": ["esnext"],
-		"outDir": "out",
-		"sourceMap": true,
-		"strict": true,
-		"rootDir": "src",
-		"esModuleInterop": true,
-		"noEmit": true
-	},
-	"include": ["src"],
-	"exclude": ["node_modules"]
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "ES2019",
+    "lib": ["esnext"],
+    "strict": true,
+    "rootDir": ".",
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "noEmit": true
+  },
+  "include": ["src", "tests/mock"],
+  "exclude": ["node_modules"]
 }
