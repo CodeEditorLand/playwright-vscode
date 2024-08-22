@@ -16,10 +16,10 @@
 
 import { locatorForSourcePosition, pruneAstCaches } from "./babelHighlightUtil";
 import { debugSessionName } from "./debugSessionName";
-import { replaceActionWithLocator, locatorMethodRegex } from "./methodNames";
+import { locatorMethodRegex, replaceActionWithLocator } from "./methodNames";
+import type { ReusedBrowser } from "./reusedBrowser";
 import type { Location } from "./upstream/reporter";
-import { ReusedBrowser } from "./reusedBrowser";
-import * as vscodeTypes from "./vscodeTypes";
+import type * as vscodeTypes from "./vscodeTypes";
 
 export type DebuggerError = { error: string; location: Location };
 

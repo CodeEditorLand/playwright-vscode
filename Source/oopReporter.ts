@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import { TeleReporterEmitter } from "./upstream/teleEmitter";
 import { WebSocketTransport } from "./transport";
-import { FullResult } from "./upstream/reporter";
+import type { FullResult } from "./upstream/reporter";
+import { TeleReporterEmitter } from "./upstream/teleEmitter";
 
 class TeleReporter extends TeleReporterEmitter {
 	private _hasSender: boolean;

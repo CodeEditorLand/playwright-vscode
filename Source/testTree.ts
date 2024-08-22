@@ -15,13 +15,13 @@
  */
 
 import path from "path";
-import { TestModelCollection } from "./testModel";
-import { createGuid } from "./utils";
-import * as vscodeTypes from "./vscodeTypes";
-import * as reporterTypes from "./upstream/reporter";
-import * as upstream from "./upstream/testTree";
-import { TeleSuite } from "./upstream/teleReceiver";
 import { DisposableBase } from "./disposableBase";
+import type { TestModelCollection } from "./testModel";
+import type * as reporterTypes from "./upstream/reporter";
+import { TeleSuite } from "./upstream/teleReceiver";
+import * as upstream from "./upstream/testTree";
+import { createGuid } from "./utils";
+import type * as vscodeTypes from "./vscodeTypes";
 
 /**
  * This class maps a collection of TestModels into the UI terms, it merges

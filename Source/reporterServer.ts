@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-import path from "path";
 import * as http from "http";
+import path from "path";
 import WebSocket, { WebSocketServer } from "ws";
-import { ConnectionTransport } from "./transport";
-import { createGuid } from "./utils";
-import * as vscodeTypes from "./vscodeTypes";
-import * as reporterTypes from "./upstream/reporter";
+import type { ConnectionTransport } from "./transport";
+import type * as reporterTypes from "./upstream/reporter";
 import { TeleReporterReceiver } from "./upstream/teleReceiver";
+import { createGuid } from "./utils";
+import type * as vscodeTypes from "./vscodeTypes";
 
 export class ReporterServer {
 	private _clientSocketPromise: Promise<WebSocket>;
@@ -119,7 +119,7 @@ export class ReporterServer {
 		const socket = await this._clientSocketPromise;
 
 		const transport: ConnectionTransport = {
-			send: function (message): void {
+			send: (message): void => {
 				if (socket.readyState !== WebSocket.CLOSING)
 					socket.send(JSON.stringify(message));
 			},

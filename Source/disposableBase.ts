@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import * as vscodeTypes from "./vscodeTypes";
+import type * as vscodeTypes from "./vscodeTypes";
 
 export class DisposableBase implements vscodeTypes.Disposable {
 	protected _disposables: vscodeTypes.Disposable[] = [];

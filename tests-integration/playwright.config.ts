@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import { defineConfig } from "@playwright/test";
-import { TestOptions } from "./tests/baseTest";
+import type { TestOptions } from "./tests/baseTest";
 
 export default defineConfig<void, TestOptions>({
 	reporter: process.env.CI ? "html" : "list",

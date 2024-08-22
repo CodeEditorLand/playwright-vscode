@@ -20,7 +20,7 @@ import fs from "fs";
 import path from "path";
 import readline from "readline";
 import which from "which";
-import * as vscodeTypes from "./vscodeTypes";
+import type * as vscodeTypes from "./vscodeTypes";
 
 export function calculateSha1(buffer: Buffer | string): string {
 	const hash = crypto.createHash("sha1");
@@ -69,15 +69,13 @@ export function ansiToHtml(text: string): string {
 					break;
 			}
 			i = end;
+		} else if (c === "\n") {
+			// Don't close to work around html parsing bug.
+			tokens.push("\n<br>\n");
+		} else if (c === " ") {
+			tokens.push("&nbsp;");
 		} else {
-			if (c === "\n") {
-				// Don't close to work around html parsing bug.
-				tokens.push("\n<br>\n");
-			} else if (c === " ") {
-				tokens.push("&nbsp;");
-			} else {
-				tokens.push(escapeHTML(c));
-			}
+			tokens.push(escapeHTML(c));
 		}
 	}
 	// Work around html parsing bugs.
@@ -128,7 +126,7 @@ export async function resolveSourceMap(
 
 	const rl = readline.createInterface({
 		input: fs.createReadStream(file),
-		crlfDelay: Infinity,
+		crlfDelay: Number.POSITIVE_INFINITY,
 	});
 
 	let lastLine: string | undefined;

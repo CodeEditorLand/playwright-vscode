@@ -16,20 +16,20 @@
 
 import { spawn } from "child_process";
 import path from "path";
-import {
+import { debugSessionName } from "./debugSessionName";
+import type {
 	ConfigFindRelatedTestFilesReport,
 	ConfigListFilesReport,
 } from "./listTests";
-import { ReporterServer } from "./reporterServer";
-import { escapeRegex, findNode, pathSeparator, runNode } from "./utils";
-import * as vscodeTypes from "./vscodeTypes";
-import * as reporterTypes from "./upstream/reporter";
 import type {
 	PlaywrightTestOptions,
 	PlaywrightTestRunOptions,
 } from "./playwrightTestTypes";
-import { debugSessionName } from "./debugSessionName";
+import { ReporterServer } from "./reporterServer";
 import type { TestModel } from "./testModel";
+import type * as reporterTypes from "./upstream/reporter";
+import { escapeRegex, findNode, pathSeparator, runNode } from "./utils";
+import type * as vscodeTypes from "./vscodeTypes";
 
 export class PlaywrightTestCLI {
 	private _vscode: vscodeTypes.VSCode;

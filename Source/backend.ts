@@ -15,10 +15,10 @@
  */
 
 import { spawn } from "child_process";
-import { findNode } from "./utils";
-import * as vscodeTypes from "./vscodeTypes";
 import EventEmitter from "events";
 import { WebSocketTransport } from "./transport";
+import { findNode } from "./utils";
+import type * as vscodeTypes from "./vscodeTypes";
 
 export type BackendServerOptions = {
 	args: string[];

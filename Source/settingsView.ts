@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
+import path from "path";
 import { DisposableBase } from "./disposableBase";
 import type { ReusedBrowser } from "./reusedBrowser";
 import type { SettingsModel } from "./settingsModel";
 import type { TestModelCollection } from "./testModel";
 import { getNonce } from "./utils";
-import * as vscodeTypes from "./vscodeTypes";
-import path from "path";
+import type * as vscodeTypes from "./vscodeTypes";
 
 type ConfigEntry = {
 	label: string;

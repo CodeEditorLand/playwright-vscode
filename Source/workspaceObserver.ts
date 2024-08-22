@@ -15,7 +15,7 @@
  */
 
 import path from "path";
-import * as vscodeTypes from "./vscodeTypes";
+import type * as vscodeTypes from "./vscodeTypes";
 
 export type WorkspaceChange = {
 	created: Set<string>;

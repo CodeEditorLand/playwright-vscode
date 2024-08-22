@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { SettingsModel } from "./settingsModel";
+import type { SettingsModel } from "./settingsModel";
 import type * as vscodeTypes from "./vscodeTypes";
 
 export type TestConfig = {

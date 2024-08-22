@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import path from "path";
 import fs from "fs";
 import os from "os";
-import * as vscodeTypes from "./vscodeTypes";
-import { TestModel } from "./testModel";
+import path from "path";
+import type { TestModel } from "./testModel";
+import type * as vscodeTypes from "./vscodeTypes";
 
 export async function installPlaywright(vscode: vscodeTypes.VSCode) {
 	const [workspaceFolder] = vscode.workspace.workspaceFolders || [];

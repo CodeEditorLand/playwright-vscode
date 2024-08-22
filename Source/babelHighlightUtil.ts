@@ -14,8 +14,14 @@
  * limitations under the License.
  */
 
-import { t, parse, ParseResult, traverse, SourceLocation } from "./babelBundle";
-import { asyncMatchers, pageMethods, locatorMethods } from "./methodNames";
+import {
+	type ParseResult,
+	type SourceLocation,
+	parse,
+	t,
+	traverse,
+} from "./babelBundle";
+import { asyncMatchers, locatorMethods, pageMethods } from "./methodNames";
 
 const astCache = new Map<string, { text: string; ast?: ParseResult }>();
 

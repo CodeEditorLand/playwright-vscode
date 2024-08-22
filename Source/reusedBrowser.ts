@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
+import fs from "fs";
+import path from "path";
+import { BackendClient, BackendServer } from "./backend";
+import { installBrowsers } from "./installer";
 import type { TestConfig } from "./playwrightTestTypes";
+import type { SettingsModel } from "./settingsModel";
 import type { TestModel, TestModelCollection } from "./testModel";
 import { createGuid } from "./utils";
-import * as vscodeTypes from "./vscodeTypes";
-import path from "path";
-import fs from "fs";
-import { installBrowsers } from "./installer";
-import { SettingsModel } from "./settingsModel";
-import { BackendServer, BackendClient } from "./backend";
+import type * as vscodeTypes from "./vscodeTypes";
 
 export class ReusedBrowser implements vscodeTypes.Disposable {
 	private _vscode: vscodeTypes.VSCode;
@@ -418,9 +418,7 @@ test('test', async ({ page }) => {
 	async onDidRunTests(debug: boolean) {
 		if (debug && !this._settingsModel.showBrowser.get()) {
 			this._stop();
-		} else {
-			if (!this._pageCount) this._stop();
-		}
+		} else if (!this._pageCount) this._stop();
 		this._isRunningTests = false;
 		this._onRunningTestsChangedEvent.fire(false);
 	}
