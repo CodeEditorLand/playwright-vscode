@@ -14,44 +14,51 @@
  * limitations under the License.
  */
 
-import { declare, t } from './babelBundle';
+import { declare, t } from "./babelBundle";
 
-export default declare(api => {
-  api.assertVersion(7);
+export default declare((api) => {
+	api.assertVersion(7);
 
-  return {
-    name: 'playwright-debug-transform',
-    visitor: {
-      ExpressionStatement(path) {
-        const expression = path.node.expression;
-        const isAwaitExpression = t.isAwaitExpression(expression);
-        const isCallExpression = t.isCallExpression(expression);
-        if (!isAwaitExpression && !isCallExpression)
-          return;
-        // Prevent re-enterability without calling path.skip.
-        if (path.parentPath.isBlockStatement() && path.parentPath.parentPath.isTryStatement())
-          return;
-        if (isAwaitExpression && !t.isCallExpression(expression.argument))
-          return;
-        path.replaceWith(t.tryStatement(
-            t.blockStatement([
-              path.node
-            ]),
-            t.catchClause(
-                t.identifier('playwrightError'),
-                t.blockStatement([
-                  t.debuggerStatement(),
-                  t.throwStatement(t.identifier('playwrightError'))
-                ])
-            )
-        ));
+	return {
+		name: "playwright-debug-transform",
+		visitor: {
+			ExpressionStatement(path) {
+				const expression = path.node.expression;
+				const isAwaitExpression = t.isAwaitExpression(expression);
+				const isCallExpression = t.isCallExpression(expression);
+				if (!isAwaitExpression && !isCallExpression) return;
+				// Prevent re-enterability without calling path.skip.
+				if (
+					path.parentPath.isBlockStatement() &&
+					path.parentPath.parentPath.isTryStatement()
+				)
+					return;
+				if (
+					isAwaitExpression &&
+					!t.isCallExpression(expression.argument)
+				)
+					return;
+				path.replaceWith(
+					t.tryStatement(
+						t.blockStatement([path.node]),
+						t.catchClause(
+							t.identifier("playwrightError"),
+							t.blockStatement([
+								t.debuggerStatement(),
+								t.throwStatement(
+									t.identifier("playwrightError"),
+								),
+							]),
+						),
+					),
+				);
 
-        // Patch source map.
-        path.node.start = expression.start;
-        path.node.end = expression.end;
-        path.node.loc = expression.loc;
-        path.node.range = expression.range;
-      }
-    }
-  };
+				// Patch source map.
+				path.node.start = expression.start;
+				path.node.end = expression.end;
+				path.node.loc = expression.loc;
+				path.node.range = expression.range;
+			},
+		},
+	};
 });
