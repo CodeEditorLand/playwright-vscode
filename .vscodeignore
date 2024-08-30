@@ -1,9 +1,0 @@
-**/*
-!out/*.js
-!l10n/*.json
-!package.nls.json
-!package.nls.*.json
-!images
-!media/*
-!LICENSE
-!README.md
