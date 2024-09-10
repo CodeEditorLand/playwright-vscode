@@ -224,6 +224,7 @@ export class Extension implements RunHooks {
         if (event.affectsConfiguration('playwright.env'))
           this._rebuildModels(false);
       }),
+      this._testTree,
       this._models,
       this._models.onUpdated(() => this._modelsUpdated()),
       this._treeItemObserver.onTreeItemSelected(item => this._treeItemSelected(item)),
@@ -352,7 +353,7 @@ export class Extension implements RunHooks {
     const testRun = this._testController.createTestRun(request);
     const testListener = this._errorReportingListener(testRun);
     try {
-      const status = (await this._models.selectedModel()?.runGlobalHooks(type, testListener)) || 'failed';
+      const status = (await this._models.selectedModel()?.runGlobalHooks(type, testListener, testRun.token)) || 'failed';
       return status;
     } finally {
       testRun.end();
@@ -533,7 +534,10 @@ export class Extension implements RunHooks {
     };
 
     if (mode === 'debug') {
-      await model.debugTests(items, testListener, testRun.token);
+      const debugEnd = new this._vscode.CancellationTokenSource();
+      testRun.token.onCancellationRequested(() => debugEnd.cancel());
+      this._vscode.debug.onDidTerminateDebugSession(() => debugEnd.cancel());
+      await model.debugTests(items, testListener, debugEnd.token);
     } else {
       // Force trace viewer update to surface check version errors.
       await this._models.selectedModel()?.updateTraceViewer(mode === 'run')?.willRunTests();
@@ -809,6 +813,7 @@ class TreeItemObserver implements vscodeTypes.Disposable{
 
   dispose() {
     clearTimeout(this._timeout);
+    this._treeItemSelected.dispose();
   }
 
   selectedTreeItem(): vscodeTypes.TreeItem | null {
