@@ -1,0 +1,4 @@
+contact_links:
+  - name: File an issue
+    url: https://github.com/microsoft/playwright/issues
+    about: We track issues in the microsoft/playwright repository
