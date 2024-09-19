@@ -119,6 +119,7 @@
 		}
 	},
 	"dependencies": {
+		"@babel/plugin-proposal-decorators": "^7.24.7",
 		"stack-utils": "^2.0.6",
 		"which": "^4.0.0",
 		"ws": "^8.17.1"
@@ -130,7 +131,7 @@
 		"@types/stack-utils": "^2.0.1",
 		"@types/which": "^3.0.3",
 		"@types/ws": "^8.5.3",
-		"esbuild": "^0.15.15",
+		"esbuild": "^0.23.1",
 		"glob": "^8.0.3"
 	},
 	"displayName": "Playwright Test for VSCode",
@@ -142,7 +143,7 @@
 		"build": "npm run esbuild -- --minify",
 		"code": "code --uninstall-extension ms-playwright.playwright && code --install-extension playwright-0.2.11.vsix",
 		"code-insiders": "code-insiders --uninstall-extension ms-playwright.playwright && code-insiders --install-extension playwright-0.2.11.vsix",
-		"esbuild": "esbuild ./src/babelBundle.ts ./src/extension.ts ./src/oopReporter.ts ./src/debugTransform.ts  ./src/playwrightFinder.ts --bundle --outdir=out --external:vscode --external:./babelBundle --external:./debugTransform --external:./oopReporter --external:./playwrightFinder --format=cjs --platform=node --target=ES2019",
+		"esbuild": "esbuild ./src/babelBundle.ts ./src/extension.ts ./src/oopReporter.ts ./src/debugTransform.ts ./src/playwrightFinder.ts --bundle --outdir=out --external:vscode --external:./babelBundle --external:./debugTransform --external:./oopReporter --external:./playwrightFinder --format=cjs --platform=node --target=ES2019",
 		"l10n": "npx @vscode/l10n-dev export -o ./l10n ./src",
 		"uncode": "code --uninstall-extension ms-playwright.playwright",
 		"uncode-insiders": "code-insiders --uninstall-extension ms-playwright.playwright"
