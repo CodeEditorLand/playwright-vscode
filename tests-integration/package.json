@@ -1,6 +1,4 @@
 {
-  "name": "tests-integration",
-  "devDependencies": {
-    "@vscode/test-electron": "^2.3.8"
-  }
+	"devDependencies": {},
+	"name": "tests-integration"
 }
