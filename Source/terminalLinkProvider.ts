@@ -13,29 +13,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import * as vscodeTypes from './vscodeTypes';
+import * as vscodeTypes from "./vscodeTypes";
 
-export function registerTerminalLinkProvider(vscode: vscodeTypes.VSCode): vscodeTypes.Disposable {
-  return vscode.window.registerTerminalLinkProvider({
-    provideTerminalLinks: (context, token) => {
-      const supportedCommands = /(npx|pnpm exec|yarn) playwright (show-report|show-trace|install).*$/;
-      const match = context.line.match(supportedCommands);
-      if (!match)
-        return [];
+export function registerTerminalLinkProvider(
+	vscode: vscodeTypes.VSCode,
+): vscodeTypes.Disposable {
+	return vscode.window.registerTerminalLinkProvider({
+		provideTerminalLinks: (context, token) => {
+			const supportedCommands =
+				/(npx|pnpm exec|yarn) playwright (show-report|show-trace|install).*$/;
+			const match = context.line.match(supportedCommands);
+			if (!match) return [];
 
-      return [
-        {
-          command: match[0],
-          startIndex: match.index!,
-          length: match[0].length,
-          tooltip: 'Show HTML report',
-        }
-      ];
-    },
-    handleTerminalLink: (link: vscodeTypes.TerminalLink & { command: string }) => {
-      const terminal = vscode.window.activeTerminal;
-      if (terminal)
-        terminal.sendText(link.command);
-    }
-  });
+			return [
+				{
+					command: match[0],
+					startIndex: match.index!,
+					length: match[0].length,
+					tooltip: "Show HTML report",
+				},
+			];
+		},
+		handleTerminalLink: (
+			link: vscodeTypes.TerminalLink & { command: string },
+		) => {
+			const terminal = vscode.window.activeTerminal;
+			if (terminal) terminal.sendText(link.command);
+		},
+	});
 }

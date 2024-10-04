@@ -1,3 +1,6 @@
+import { parse } from "@babel/core";
+import traverseFunc from "@babel/traverse";
+
 /**
  * Copyright (c) Microsoft Corporation.
  *
@@ -14,14 +17,14 @@
  * limitations under the License.
  */
 
-export { types as t } from '@babel/core';
-import { parse } from '@babel/core';
+export { types as t } from "@babel/core";
+
 export { parse };
 export type ParseResult = ReturnType<typeof parse>;
-import traverseFunc from '@babel/traverse';
-export const traverse = traverseFunc;
-export type { SourceLocation } from '@babel/types';
-export { declare } from '@babel/helper-plugin-utils';
 
-export const babelPluginProposalDecorators = require('@babel/plugin-proposal-decorators');
-export const babelPresetTypescript = require('@babel/preset-typescript');
+export const traverse = traverseFunc;
+export type { SourceLocation } from "@babel/types";
+export { declare } from "@babel/helper-plugin-utils";
+
+export const babelPluginProposalDecorators = require("@babel/plugin-proposal-decorators");
+export const babelPresetTypescript = require("@babel/preset-typescript");

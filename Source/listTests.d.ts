@@ -14,23 +14,23 @@
  * limitations under the License.
  */
 
-import type { TestError } from './upstream/reporter';
+import type { TestError } from "./upstream/reporter";
 
 // This matches the structs in packages/playwright-test/src/runner/runner.ts.
 
 export type ProjectConfigWithFiles = {
-  name: string;
-  testDir: string;
-  use: { testIdAttribute?: string };
-  files: string[];
+	name: string;
+	testDir: string;
+	use: { testIdAttribute?: string };
+	files: string[];
 };
 
 export type ConfigListFilesReport = {
-  projects: ProjectConfigWithFiles[];
-  error?: TestError;
+	projects: ProjectConfigWithFiles[];
+	error?: TestError;
 };
 
 export type ConfigFindRelatedTestFilesReport = {
-  testFiles: string[];
-  errors?: TestError[];
+	testFiles: string[];
+	errors?: TestError[];
 };

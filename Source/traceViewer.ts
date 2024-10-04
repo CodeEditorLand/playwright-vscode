@@ -15,16 +15,19 @@
  */
 
 export type TraceViewer = {
-  currentFile(): string | undefined;
-  willRunTests(): Promise<void>;
-  open(file?: string): Promise<void>;
-  reveal?(): Promise<void>;
-  close(): void;
-  infoForTest(): Promise<{
-    type: string;
-    serverUrlPrefix?: string;
-    testConfigFile: string;
-    traceFile?: string;
-    visible: boolean;
-  } | undefined>;
+	currentFile(): string | undefined;
+	willRunTests(): Promise<void>;
+	open(file?: string): Promise<void>;
+	reveal?(): Promise<void>;
+	close(): void;
+	infoForTest(): Promise<
+		| {
+				type: string;
+				serverUrlPrefix?: string;
+				testConfigFile: string;
+				traceFile?: string;
+				visible: boolean;
+		  }
+		| undefined
+	>;
 };

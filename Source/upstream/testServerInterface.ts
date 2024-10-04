@@ -14,117 +14,123 @@
  * limitations under the License.
  */
 
-import type * as reporterTypes from './reporter';
-import type { Event } from '../vscodeTypes';
-import { JsonEvent } from './teleReceiver';
+import type { Event } from "../vscodeTypes";
+import type * as reporterTypes from "./reporter";
+import { JsonEvent } from "./teleReceiver";
 
 // -- Reuse boundary -- Everything below this line is taken from playwright core.
 
 export type ReportEntry = JsonEvent;
 
 export interface TestServerInterface {
-  initialize(params: {
-    serializer?: string,
-    closeOnDisconnect?: boolean,
-    interceptStdio?: boolean,
-    watchTestDirs?: boolean,
-  }): Promise<void>;
+	initialize(params: {
+		serializer?: string;
+		closeOnDisconnect?: boolean;
+		interceptStdio?: boolean;
+		watchTestDirs?: boolean;
+	}): Promise<void>;
 
-  ping(params: {}): Promise<void>;
+	ping(params: {}): Promise<void>;
 
-  watch(params: {
-    fileNames: string[];
-  }): Promise<void>;
+	watch(params: { fileNames: string[] }): Promise<void>;
 
-  open(params: { location: reporterTypes.Location }): Promise<void>;
+	open(params: { location: reporterTypes.Location }): Promise<void>;
 
-  resizeTerminal(params: { cols: number, rows: number }): Promise<void>;
+	resizeTerminal(params: { cols: number; rows: number }): Promise<void>;
 
-  checkBrowsers(params: {}): Promise<{ hasBrowsers: boolean }>;
+	checkBrowsers(params: {}): Promise<{ hasBrowsers: boolean }>;
 
-  installBrowsers(params: {}): Promise<void>;
+	installBrowsers(params: {}): Promise<void>;
 
-  runGlobalSetup(params: {}): Promise<{
-    report: ReportEntry[],
-    status: reporterTypes.FullResult['status']
-  }>;
+	runGlobalSetup(params: {}): Promise<{
+		report: ReportEntry[];
+		status: reporterTypes.FullResult["status"];
+	}>;
 
-  runGlobalTeardown(params: {}): Promise<{
-    report: ReportEntry[],
-    status: reporterTypes.FullResult['status']
-  }>;
+	runGlobalTeardown(params: {}): Promise<{
+		report: ReportEntry[];
+		status: reporterTypes.FullResult["status"];
+	}>;
 
-  startDevServer(params: {}): Promise<{
-    report: ReportEntry[];
-    status: reporterTypes.FullResult['status']
-  }>;
+	startDevServer(params: {}): Promise<{
+		report: ReportEntry[];
+		status: reporterTypes.FullResult["status"];
+	}>;
 
-  stopDevServer(params: {}): Promise<{
-    report: ReportEntry[];
-    status: reporterTypes.FullResult['status']
-  }>;
+	stopDevServer(params: {}): Promise<{
+		report: ReportEntry[];
+		status: reporterTypes.FullResult["status"];
+	}>;
 
-  clearCache(params: {}): Promise<void>;
+	clearCache(params: {}): Promise<void>;
 
-  listFiles(params: {
-    projects?: string[];
-  }): Promise<{
-    report: ReportEntry[];
-    status: reporterTypes.FullResult['status']
-  }>;
+	listFiles(params: { projects?: string[] }): Promise<{
+		report: ReportEntry[];
+		status: reporterTypes.FullResult["status"];
+	}>;
 
-  /**
-   * Returns list of teleReporter events.
-   */
-  listTests(params: {
-    projects?: string[];
-    locations?: string[];
-  }): Promise<{
-    report: ReportEntry[],
-    status: reporterTypes.FullResult['status']
-  }>;
+	/**
+	 * Returns list of teleReporter events.
+	 */
+	listTests(params: { projects?: string[]; locations?: string[] }): Promise<{
+		report: ReportEntry[];
+		status: reporterTypes.FullResult["status"];
+	}>;
 
-  runTests(params: {
-    locations?: string[];
-    grep?: string;
-    grepInvert?: string;
-    testIds?: string[];
-    headed?: boolean;
-    workers?: number | string;
-    timeout?: number,
-    outputDir?: string;
-    updateSnapshots?: 'all' | 'none' | 'missing';
-    reporters?: string[],
-    trace?: 'on' | 'off';
-    video?: 'on' | 'off';
-    projects?: string[];
-    reuseContext?: boolean;
-    connectWsEndpoint?: string;
-  }): Promise<{
-    status: reporterTypes.FullResult['status'];
-  }>;
+	runTests(params: {
+		locations?: string[];
+		grep?: string;
+		grepInvert?: string;
+		testIds?: string[];
+		headed?: boolean;
+		workers?: number | string;
+		timeout?: number;
+		outputDir?: string;
+		updateSnapshots?: "all" | "none" | "missing";
+		reporters?: string[];
+		trace?: "on" | "off";
+		video?: "on" | "off";
+		projects?: string[];
+		reuseContext?: boolean;
+		connectWsEndpoint?: string;
+	}): Promise<{
+		status: reporterTypes.FullResult["status"];
+	}>;
 
-  findRelatedTestFiles(params: {
-    files: string[];
-  }): Promise<{ testFiles: string[]; errors?: reporterTypes.TestError[]; }>;
+	findRelatedTestFiles(params: {
+		files: string[];
+	}): Promise<{ testFiles: string[]; errors?: reporterTypes.TestError[] }>;
 
-  stopTests(params: {}): Promise<void>;
+	stopTests(params: {}): Promise<void>;
 
-  closeGracefully(params: {}): Promise<void>;
+	closeGracefully(params: {}): Promise<void>;
 }
 
 export interface TestServerInterfaceEvents {
-  onReport: Event<any>;
-  onStdio: Event<{ type: 'stdout' | 'stderr', text?: string, buffer?: string }>;
-  onListChanged: Event<void>;
-  onTestFilesChanged: Event<{ testFiles: string[] }>;
-  onLoadTraceRequested: Event<{ traceUrl: string }>;
+	onReport: Event<any>;
+	onStdio: Event<{
+		type: "stdout" | "stderr";
+		text?: string;
+		buffer?: string;
+	}>;
+	onListChanged: Event<void>;
+	onTestFilesChanged: Event<{ testFiles: string[] }>;
+	onLoadTraceRequested: Event<{ traceUrl: string }>;
 }
 
 export interface TestServerInterfaceEventEmitters {
-  dispatchEvent(event: 'report', params: ReportEntry): void;
-  dispatchEvent(event: 'stdio', params: { type: 'stdout' | 'stderr', text?: string, buffer?: string }): void;
-  dispatchEvent(event: 'listChanged', params: {}): void;
-  dispatchEvent(event: 'testFilesChanged', params: { testFiles: string[] }): void;
-  dispatchEvent(event: 'loadTraceRequested', params: { traceUrl: string }): void;
+	dispatchEvent(event: "report", params: ReportEntry): void;
+	dispatchEvent(
+		event: "stdio",
+		params: { type: "stdout" | "stderr"; text?: string; buffer?: string },
+	): void;
+	dispatchEvent(event: "listChanged", params: {}): void;
+	dispatchEvent(
+		event: "testFilesChanged",
+		params: { testFiles: string[] },
+	): void;
+	dispatchEvent(
+		event: "loadTraceRequested",
+		params: { traceUrl: string },
+	): void;
 }
