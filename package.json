@@ -1,17 +1,7 @@
 {
-	"name": "playwright",
-	"displayName": "Playwright Test for VSCode",
-	"description": "%description%",
-	"main": "./out/extension.js",
-	"scripts": {
-		"build": "npm run esbuild -- --minify",
-		"code": "code --uninstall-extension ms-playwright.playwright && code --install-extension playwright-0.2.11.vsix",
-		"code-insiders": "code-insiders --uninstall-extension ms-playwright.playwright && code-insiders --install-extension playwright-0.2.11.vsix",
-		"esbuild": "esbuild ./src/babelBundle.ts ./src/extension.ts ./src/oopReporter.ts ./src/debugTransform.ts ./src/playwrightFinder.ts --bundle --outdir=out --external:vscode --external:./babelBundle --external:./debugTransform --external:./oopReporter --external:./playwrightFinder --format=cjs --platform=node --target=ES2019",
-		"l10n": "npx @vscode/l10n-dev export -o ./l10n ./src",
-		"uncode": "code --uninstall-extension ms-playwright.playwright",
-		"uncode-insiders": "code-insiders --uninstall-extension ms-playwright.playwright"
-	},
+	"activationEvents": [
+		"workspaceContains:**/*playwright*.config.{ts,js,mjs}"
+	],
 	"contributes": {
 		"commands": [
 			{
@@ -128,15 +118,13 @@
 			]
 		}
 	},
-	"activationEvents": [
-		"workspaceContains:**/*playwright*.config.{ts,js,mjs}"
-	],
 	"dependencies": {
 		"@babel/plugin-proposal-decorators": "^7.25.7",
 		"stack-utils": "^2.0.6",
 		"which": "^5.0.0",
 		"ws": "^8.18.0"
 	},
+	"description": "%description%",
 	"devDependencies": {
 		"@types/glob": "^8.1.0",
 		"@types/node": "^22.7.5",
@@ -146,6 +134,18 @@
 		"esbuild": "^0.24.0",
 		"glob": "^11.0.0"
 	},
+	"displayName": "Playwright Test for VSCode",
 	"icon": "images/playwright-logo.png",
-	"l10n": "./l10n"
+	"l10n": "./l10n",
+	"main": "./out/extension.js",
+	"name": "playwright",
+	"scripts": {
+		"build": "npm run esbuild -- --minify",
+		"code": "code --uninstall-extension ms-playwright.playwright && code --install-extension playwright-0.2.11.vsix",
+		"code-insiders": "code-insiders --uninstall-extension ms-playwright.playwright && code-insiders --install-extension playwright-0.2.11.vsix",
+		"esbuild": "esbuild ./src/babelBundle.ts ./src/extension.ts ./src/oopReporter.ts ./src/debugTransform.ts ./src/playwrightFinder.ts --bundle --outdir=out --external:vscode --external:./babelBundle --external:./debugTransform --external:./oopReporter --external:./playwrightFinder --format=cjs --platform=node --target=ES2019",
+		"l10n": "npx @vscode/l10n-dev export -o ./l10n ./src",
+		"uncode": "code --uninstall-extension ms-playwright.playwright",
+		"uncode-insiders": "code-insiders --uninstall-extension ms-playwright.playwright"
+	}
 }
