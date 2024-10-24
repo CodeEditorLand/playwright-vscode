@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { downloadAndUnzipVSCode } from "@vscode/test-electron/out/download";
+import { downloadAndUnzipVSCode } from '@vscode/test-electron/out/download';
 
 export default async () => {
-	await downloadAndUnzipVSCode("insiders");
+  await downloadAndUnzipVSCode('insiders');
 };
