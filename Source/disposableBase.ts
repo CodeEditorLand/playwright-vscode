@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-import * as vscodeTypes from "./vscodeTypes";
+import * as vscodeTypes from './vscodeTypes';
 
 export class DisposableBase implements vscodeTypes.Disposable {
-	protected _disposables: vscodeTypes.Disposable[] = [];
+  protected _disposables: vscodeTypes.Disposable[] = [];
 
-	dispose() {
-		for (const d of this._disposables) d.dispose();
-		this._disposables = [];
-	}
+  dispose() {
+    for (const d of this._disposables)
+      d.dispose();
+    this._disposables = [];
+  }
 }

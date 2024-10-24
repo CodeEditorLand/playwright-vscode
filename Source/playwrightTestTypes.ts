@@ -14,39 +14,36 @@
  * limitations under the License.
  */
 
-import { SettingsModel } from "./settingsModel";
-import type * as vscodeTypes from "./vscodeTypes";
+import { SettingsModel } from './settingsModel';
+import type * as vscodeTypes from './vscodeTypes';
 
 export type TestConfig = {
-	workspaceFolder: string;
-	configFile: string;
-	cli: string;
-	version: number;
-	testIdAttributeName?: string;
+  workspaceFolder: string;
+  configFile: string;
+  cli: string;
+  version: number;
+  testIdAttributeName?: string;
 };
 
 export type PlaywrightTestRunOptions = {
-	headed?: boolean;
-	workers?: string | number;
-	trace?: "on" | "off";
-	video?: "on" | "off";
-	reuseContext?: boolean;
-	connectWsEndpoint?: string;
+  headed?: boolean;
+  workers?: string | number;
+  trace?: 'on' | 'off';
+  video?: 'on' | 'off';
+  reuseContext?: boolean;
+  connectWsEndpoint?: string;
 };
 
 export interface RunHooks {
-	onWillRunTests(
-		config: TestConfig,
-		debug: boolean,
-	): Promise<{ connectWsEndpoint?: string }>;
-	onDidRunTests(debug: boolean): Promise<void>;
+  onWillRunTests(config: TestConfig, debug: boolean): Promise<{ connectWsEndpoint?: string }>;
+  onDidRunTests(debug: boolean): Promise<void>;
 }
 
 export type PlaywrightTestOptions = {
-	settingsModel: SettingsModel;
-	runHooks: RunHooks;
-	isUnderTest: boolean;
-	playwrightTestLog: string[];
-	envProvider: () => NodeJS.ProcessEnv;
-	onStdOut: vscodeTypes.Event<string>;
+  settingsModel: SettingsModel;
+  runHooks: RunHooks;
+  isUnderTest: boolean;
+  playwrightTestLog: string[];
+  envProvider: () => NodeJS.ProcessEnv;
+  onStdOut: vscodeTypes.Event<string>;
 };
