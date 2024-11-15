@@ -22,71 +22,22 @@ import readline from 'readline';
 import which from 'which';
 import * as vscodeTypes from './vscodeTypes';
 
-export function calculateSha1(buffer: Buffer | string): string {
-  const hash = crypto.createHash('sha1');
-  hash.update(buffer);
-  return hash.digest('hex');
-}
-
 export function createGuid(): string {
   return crypto.randomBytes(16).toString('hex');
 }
 
-export function ansiToHtml(text: string): string {
-  let isOpen = false;
-  let hasTags = false;
-  const tokens: string[] = [];
-  for (let i = 0; i < text.length; ++i) {
-    const c = text.charAt(i);
-    if (c === '\u001b') {
-      hasTags = true;
-      const end = text.indexOf('m', i + 1);
-      const code = text.substring(i + 1, end);
-      if (!code.match(/\[\d+/))
-        continue;
-      if (isOpen) {
-        tokens.push('</span>');
-        isOpen = false;
-      }
-      switch (code) {
-        case '[2': {
-          tokens.push(`<span style='color:#666;'>`);
-          isOpen = true;
-          break;
-        }
-        case '[22': break;
-        case '[31': {
-          tokens.push(`<span style='color:#f14c4c;'>`);
-          isOpen = true;
-          break;
-        }
-        case '[32': {
-          tokens.push(`<span style='color:#73c991;'>`);
-          isOpen = true;
-          break;
-        }
-        case '[39': break;
-      }
-      i = end;
-    } else {
-      if (c === '\n') {
-        // Don't close to work around html parsing bug.
-        tokens.push('\n<br>\n');
-      } else if (c === ' ') {
-        tokens.push('&nbsp;');
-      } else {
-        tokens.push(escapeHTML(c));
-      }
-    }
-  }
-  // Work around html parsing bugs.
-  if (hasTags)
-    tokens.push('\n</span></br>');
-  return tokens.join('');
+const ansiRegex = new RegExp('([\\u001B\\u009B][[\\]()#;?]*(?:(?:(?:[a-zA-Z\\d]*(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]*)*)?\\u0007)|(?:(?:\\d{1,4}(?:;\\d{0,4})*)?[\\dA-PR-TZcf-ntqry=><~])))', 'g');
+export function stripAnsi(str: string): string {
+  return str.replace(ansiRegex, '');
 }
 
-function escapeHTML(text: string): string {
-  return text.replace(/[&"<>]/g, c => ({ '&': '&amp;', '"': '&quot;', '<': '<b>&lt;</b>', '>': '<b>&gt;</b>' }[c]!));
+export function stripBabelFrame(text: string) {
+  const result: string[] =  [];
+  for (const line of text.split('\n')) {
+    if (!line.trim().match(/>?\s*\d*\s*\|/))
+      result.push(line);
+  }
+  return result.join('\n').trim();
 }
 
 export async function spawnAsync(executable: string, args: string[], cwd?: string, settingsEnv?: NodeJS.ProcessEnv): Promise<string> {
