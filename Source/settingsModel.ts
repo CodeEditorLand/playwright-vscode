@@ -73,6 +73,7 @@ export class SettingsModel extends DisposableBase {
 
   private _modernize() {
     const workspaceSettings = this._vscode.workspace.getConfiguration('playwright').get('workspaceSettings') as any;
+
     if (workspaceSettings?.configs && !this._context.workspaceState.get(workspaceStateKey)) {
       this._context.workspaceState.update(workspaceStateKey, { configs: workspaceSettings.configs });
       this._vscode.workspace.getConfiguration('playwright').update('workspaceSettings', undefined);
@@ -84,13 +85,16 @@ export class SettingsModel extends DisposableBase {
     this._disposables.push(setting);
     this._disposables.push(setting.onChange(() => this._onChange.fire()));
     this._settings.set(settingName, setting);
+
     return setting;
   }
 
   json(): Record<string, boolean | string> {
     const result: Record<string, boolean | string> = {};
+
     for (const [key, setting] of this._settings)
       result[key] = setting.get();
+
     return result;
   }
 }
@@ -142,12 +146,15 @@ class PersistentSetting<T> extends SettingBase<T> {
 
   get(): T {
     const configuration = this._vscode.workspace.getConfiguration('playwright');
+
     return configuration.get(this.settingName) as T;
   }
 
   async set(value: T) {
     const configuration = this._vscode.workspace.getConfiguration('playwright');
+
     const existsInWorkspace = configuration.inspect(this.settingName)?.workspaceValue !== undefined;
+
     if (existsInWorkspace)
       configuration.update(this.settingName, value, false);
     // Intentionally fall through.

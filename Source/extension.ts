@@ -116,6 +116,7 @@ export class Extension implements RunHooks {
     this._testController = vscode.tests.createTestController('playwright', 'Playwright');
     this._testController.resolveHandler = item => this._resolveChildren(item);
     this._testController.refreshHandler = () => this._rebuildModels(true).then(() => {});
+
     const supportsContinuousRun = true;
     this._runProfile = this._testController.createRunProfile('playwright-run', this._vscode.TestRunProfileKind.Run, this._handleTestRun.bind(this, false), true, undefined, supportsContinuousRun);
     this._debugProfile = this._testController.createRunProfile('playwright-debug', this._vscode.TestRunProfileKind.Debug, this._handleTestRun.bind(this, true), true, undefined, supportsContinuousRun);
@@ -128,6 +129,7 @@ export class Extension implements RunHooks {
 
   async onWillRunTests(config: TestConfig, debug: boolean) {
     await this._reusedBrowser.onWillRunTests(config, debug);
+
     return {
       connectWsEndpoint: this._reusedBrowser.browserServerWSEndpoint(),
     };
@@ -149,6 +151,7 @@ export class Extension implements RunHooks {
   async activate() {
     const vscode = this._vscode;
     this._settingsView = new SettingsView(vscode, this._settingsModel, this._models, this._reusedBrowser, this._context.extensionUri);
+
     const messageNoPlaywrightTestsFound = this._vscode.l10n.t('No Playwright tests found.');
     this._disposables = [
       this._debugHighlight,
@@ -168,6 +171,7 @@ export class Extension implements RunHooks {
           return;
         }
         const versions = this._models.versions();
+
         for (const model of versions.values())
           await installBrowsers(this._vscode, model);
       }),
@@ -241,6 +245,7 @@ export class Extension implements RunHooks {
       this._treeItemObserver,
       registerTerminalLinkProvider(this._vscode),
     ];
+
     const fileSystemWatchers = [
       // Glob parser does not supported nested group, hence multiple watchers.
       this._vscode.workspace.createFileSystemWatcher('**/*playwright*.config.{ts,js,mts,mjs}'),
@@ -270,6 +275,7 @@ export class Extension implements RunHooks {
     this._testTree.startedLoading();
 
     const configFiles = await this._vscode.workspace.findFiles('**/*playwright*.config.{ts,js,mts,mjs}', '**/node_modules/**');
+
     for (const configFileUri of configFiles) {
       const configFilePath = configFileUri.fsPath;
       // TODO: parse .gitignore
@@ -292,6 +298,7 @@ export class Extension implements RunHooks {
           );
         }
         console.error('[Playwright Test]:', (error as any)?.message);
+
         continue;
       }
 
@@ -312,6 +319,7 @@ export class Extension implements RunHooks {
 
     await this._models.ensureHasEnabledModels();
     this._testTree.finishedLoading();
+
     return configFiles;
   }
 
@@ -323,6 +331,7 @@ export class Extension implements RunHooks {
 
   private _envProvider(): NodeJS.ProcessEnv {
     const env = this._vscode.workspace.getConfiguration('playwright').get('env', {});
+
     return Object.fromEntries(Object.entries(env).map(entry => {
       return typeof entry[1] === 'string' ? entry : [entry[0], JSON.stringify(entry[1])];
     })) as NodeJS.ProcessEnv;
@@ -347,6 +356,7 @@ export class Extension implements RunHooks {
 
   private async _queueWatchRun(include: readonly vscodeTypes.TestItem[], type: 'files' | 'items') {
     const batch = type === 'files' ? this._watchFilesBatch : this._watchItemsBatch;
+
     if (batch) {
       batch.push(...include); // `narrowDownLocations` dedupes before sending to the testserver, no need to dedupe here
       return;
@@ -354,6 +364,7 @@ export class Extension implements RunHooks {
 
     if (type === 'files')
       this._watchFilesBatch = [...include];
+
     else
       this._watchItemsBatch = [...include];
 
@@ -378,9 +389,13 @@ export class Extension implements RunHooks {
   private async _runGlobalHooks(type: 'setup' | 'teardown') {
     if (!this._models.selectedModel()?.needsGlobalHooks(type))
       return 'passed';
+
     const request = new this._vscode.TestRunRequest();
+
     const testRun = this._testController.createTestRun(request);
+
     const testListener = this._errorReportingListener(testRun);
+
     try {
       const status = (await this._models.selectedModel()?.runGlobalHooks(type, testListener, testRun.token)) || 'failed';
       return status;
@@ -398,12 +413,14 @@ export class Extension implements RunHooks {
     // selected test items.
     const rootItems: vscodeTypes.TestItem[] = [];
     this._testController.items.forEach(item => rootItems.push(item));
+
     const requestWithDeps = new this._vscode.TestRunRequest(rootItems, [], undefined, mode === 'watch');
 
     // Global errors are attributed to the first test item in the request.
     // If the request is global, find the first root test item (folder, file) that has
     // children. It will be reveal with an error.
     let testItemForGlobalErrors = include?.[0];
+
     if (!testItemForGlobalErrors) {
       for (const rootItem of rootItems) {
         if (!rootItem.children.size)
@@ -412,15 +429,18 @@ export class Extension implements RunHooks {
           if (!testItemForGlobalErrors)
             testItemForGlobalErrors = c;
         });
+
         if (testItemForGlobalErrors)
           break;
       }
     }
 
     this._testRun = this._testController.createTestRun(requestWithDeps);
+
     const enqueuedTests: vscodeTypes.TestItem[] = [];
     // Provisionally mark tests (not files and not suits) as enqueued to provide immediate feedback.
     const toEnqueue = include?.length ? include : rootItems;
+
     for (const item of toEnqueue) {
       for (const test of this._testTree.collectTestsInside(item)) {
         this._testRun.enqueued(test);
@@ -429,11 +449,14 @@ export class Extension implements RunHooks {
     }
 
     const items: vscodeTypes.TestItem[] = include ? [...include] : [];
+
     try {
       for (const model of this._models.enabledModels()) {
         const result = model.narrowDownLocations(items);
+
         if (!result.testIds && !result.locations)
           continue;
+
         if (!model.enabledProjects().length)
           continue;
         await this._runTest(this._testRun, items, testItemForGlobalErrors, new Set(), model, mode, enqueuedTests.length === 1);
@@ -476,6 +499,7 @@ export class Extension implements RunHooks {
 
       onBegin: (rootSuite: reporterTypes.Suite) => {
         model.updateFromRunningProjects(rootSuite.suites);
+
         for (const test of rootSuite.allTests()) {
           const testItem = this._testTree.testItemForTest(test);
           if (testItem)
@@ -485,6 +509,7 @@ export class Extension implements RunHooks {
 
       onTestBegin: (test: reporterTypes.TestCase, result: reporterTypes.TestResult) => {
         const testItem = this._testTree.testItemForTest(test);
+
         if (testItem) {
           testRun.started(testItem);
           const fullProject = ancestorProject(test);
@@ -494,6 +519,7 @@ export class Extension implements RunHooks {
 
         if (testItem && enqueuedSingleTest)
           this._showTraceOnTestProgress(testItem);
+
         if (mode === 'debug') {
           // Debugging is always single-workers.
           this._testItemUnderDebug = testItem;
@@ -506,6 +532,7 @@ export class Extension implements RunHooks {
         this._executionLinesChanged();
 
         const testItem = this._testTree.testItemForTest(test);
+
         if (!testItem)
           return;
 
@@ -513,6 +540,7 @@ export class Extension implements RunHooks {
         // if trace viewer is currently displaying the trace file about to be replaced, it needs to be refreshed
         const prevTrace = (testItem as any)[traceUrlSymbol];
         (testItem as any)[traceUrlSymbol] = trace;
+
         if (enqueuedSingleTest || prevTrace === this._models.selectedModel()?.traceViewer()?.currentFile())
           this._showTraceOnTestProgress(testItem);
 
@@ -520,6 +548,7 @@ export class Extension implements RunHooks {
           if (!testFailures.has(testItem)) {
             if (result.status === 'skipped')
               testRun.skipped(testItem);
+
             else
               testRun.passed(testItem, result.duration);
           }
@@ -532,7 +561,9 @@ export class Extension implements RunHooks {
       onStepBegin: (test: reporterTypes.TestCase, result: reporterTypes.TestResult, testStep: reporterTypes.TestStep) => {
         if (!testStep.location)
           return;
+
         let step = this._activeSteps.get(testStep);
+
         if (!step) {
           step = {
             location: new this._vscode.Location(
@@ -550,12 +581,15 @@ export class Extension implements RunHooks {
       onStepEnd: (test: reporterTypes.TestCase, result: reporterTypes.TestResult, testStep: reporterTypes.TestStep) => {
         if (!testStep.location)
           return;
+
         const step = this._activeSteps.get(testStep);
+
         if (!step)
           return;
         --step.activeCount;
         step.duration = testStep.duration;
         this._completedSteps.set(testStep, step);
+
         if (step.activeCount === 0)
           this._activeSteps.delete(testStep);
         this._executionLinesChanged();
@@ -595,6 +629,7 @@ export class Extension implements RunHooks {
         }
       }
     };
+
     return testListener;
   }
 
@@ -622,6 +657,7 @@ export class Extension implements RunHooks {
 
   private _updateDiagnostics() {
     this._diagnostics.clear();
+
     const diagnosticsByFile = new Map<string, Map<string, vscodeTypes.Diagnostic>>();
 
     const addError = (error: reporterTypes.TestError) => {
@@ -654,7 +690,9 @@ export class Extension implements RunHooks {
   private _errorInDebugger(errorStack: string, location: reporterTypes.Location) {
     if (!this._testRun || !this._testItemUnderDebug)
       return;
+
     const testMessage = this._testMessageFromText(errorStack);
+
     const position = new this._vscode.Position(location.line - 1, location.column - 1);
     testMessage.location = new this._vscode.Location(this._vscode.Uri.file(location.file), position);
     this._testRun.failed(this._testItemUnderDebug, testMessage);
@@ -663,6 +701,7 @@ export class Extension implements RunHooks {
 
   private _executionLinesChanged() {
     const active = [...this._activeSteps.values()];
+
     const completed = [...this._completedSteps.values()];
 
     for (const editor of this._vscode.window.visibleTextEditors) {
@@ -694,11 +733,14 @@ export class Extension implements RunHooks {
 
   private _linkifyStack(text: string): string {
     const result: string[] = [];
+
     const prefixes = (this._vscode.workspace.workspaceFolders || []).map(f => f.uri.fsPath.toLowerCase() + path.sep);
+
     for (let line of text.split('\n')) {
       const lowerLine = line.toLowerCase();
       for (const prefix of prefixes) {
         const index = lowerLine.indexOf(prefix);
+
         if (index !== -1) {
           line = line.substring(0, index) + line.substring(index + prefix.length);
           break;
@@ -714,21 +756,26 @@ export class Extension implements RunHooks {
     markdownString.isTrusted = true;
     markdownString.supportHtml = true;
     markdownString.appendMarkdown(ansi2html(this._linkifyStack(text)));
+
     return new this._vscode.TestMessage(markdownString);
   }
 
   private _testMessageFromHtml(html: string): vscodeTypes.TestMessage {
     // We need to trim each line on the left side so that Markdown will render it as HTML.
     const trimmedLeft = html.split('\n').join('').trimStart();
+
     const markdownString = new this._vscode.MarkdownString(trimmedLeft);
     markdownString.isTrusted = true;
     markdownString.supportHtml = true;
+
     return new this._vscode.TestMessage(markdownString);
   }
 
   private _testMessageForTestError(error: reporterTypes.TestError, testItem?: vscodeTypes.TestItem): vscodeTypes.TestMessage {
     const text = this._formatError(error);
+
     let testMessage: vscodeTypes.TestMessage;
+
     if (text.includes('Looks like Playwright Test or Playwright')) {
       testMessage = this._testMessageFromHtml(`
         <p>Playwright browser are not installed.</p>
@@ -743,6 +790,7 @@ export class Extension implements RunHooks {
       testMessage = this._testMessageFromText(text);
     }
     const location = error.location || parseLocationFromStack(error.stack, testItem);
+
     if (location) {
       const position = new this._vscode.Position(location.line - 1, location.column - 1);
       testMessage.location = new this._vscode.Location(this._vscode.Uri.file(location.file), position);
@@ -752,8 +800,10 @@ export class Extension implements RunHooks {
 
   private _formatError(error: reporterTypes.TestError): string {
     const tokens = [error.stack || error.message || error.value || ''];
+
     if (error.cause)
       tokens.push('[cause]: ' + this._formatError(error.cause));
+
     return tokens.join('\n');
   }
 
@@ -781,6 +831,7 @@ export class Extension implements RunHooks {
   private _treeItemSelected(treeItem: vscodeTypes.TreeItem | null) {
     if (!treeItem)
       return;
+
     const traceUrl = (treeItem as any)[traceUrlSymbol];
     this._models.selectedModel()?.traceViewer()?.open(traceUrl);
   }
@@ -788,6 +839,7 @@ export class Extension implements RunHooks {
   private _queueCommand<T>(callback: () => Promise<T>, defaultValue: T): Promise<T> {
     const result = this._commandQueue.then(callback).catch(e => { console.error(e); return defaultValue; });
     this._commandQueue = result.then(() => {});
+
     return result;
   }
 }
@@ -796,9 +848,11 @@ function parseLocationFromStack(stack: string | undefined, testItem?: vscodeType
   const lines = stack?.split('\n') || [];
   for (const line of lines) {
     const frame = stackUtils.parseLine(line);
+
     if (!frame || !frame.file || !frame.line || !frame.column)
       continue;
     frame.file = frame.file.replace(/\//g, path.sep);
+
     if (!testItem || testItem.uri!.fsPath === frame.file) {
       return {
         file: frame.file,
@@ -834,8 +888,11 @@ class TreeItemObserver implements vscodeTypes.Disposable{
 
   private async _poll() {
     clearTimeout(this._timeout);
+
     const result = await this._vscode.commands.executeCommand('testing.getExplorerSelection') as { include: vscodeTypes.TreeItem[] };
+
     const item = result.include.length === 1 ? result.include[0] : null;
+
     if (item !== this._selectedTreeItem) {
       this._selectedTreeItem = item;
       this._treeItemSelected.fire(item);

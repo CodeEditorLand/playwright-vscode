@@ -78,6 +78,7 @@ export class WorkspaceObserver {
     if (this._timeout)
       clearTimeout(this._timeout);
     this._timeout = setTimeout(() => this._reportChange(), 50);
+
     return this._pendingChange;
   }
 
@@ -90,6 +91,7 @@ export class WorkspaceObserver {
   dispose() {
     if (this._timeout)
       clearTimeout(this._timeout);
+
     for (const disposables of this._folderWatchers.values())
       disposables.forEach(d => d.dispose());
     this._folderWatchers.clear();

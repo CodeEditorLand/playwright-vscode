@@ -44,6 +44,7 @@ export class SpawnTraceViewer implements TraceViewer {
 
   async open(file?: string) {
     this._currentFile = file;
+
     if (!file && !this._traceViewerProcess)
       return;
     await this._startIfNeeded();
@@ -52,9 +53,12 @@ export class SpawnTraceViewer implements TraceViewer {
 
   private async _startIfNeeded() {
     const node = await findNode(this._vscode, this._config.workspaceFolder);
+
     if (this._traceViewerProcess)
       return;
+
     const allArgs = [this._config.cli, 'show-trace', `--stdin`];
+
     if (this._vscode.env.remoteName) {
       allArgs.push('--host', '0.0.0.0');
       allArgs.push('--port', '0');
@@ -84,9 +88,11 @@ export class SpawnTraceViewer implements TraceViewer {
       this._vscode.window.showErrorMessage(error.message);
       this.close();
     });
+
     if (this._vscode.isUnderTest) {
       traceViewerProcess.stdout?.on('data', data => {
         const match = data.toString().match(/Listening on (.*)/);
+
         if (match)
           this._serverUrlPrefixForTest = match[1];
       });

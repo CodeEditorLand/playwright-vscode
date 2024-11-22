@@ -40,14 +40,17 @@ export class BackendServer<T extends BackendClient> {
 
   async startAndConnect(): Promise<T | null> {
     const client = this._clientFactory();
+
     const wsEndpoint = await startBackend(this._vscode, {
       ...this._options,
       onError: error => client._onErrorEvent.fire(error),
       onClose: () => client._onCloseEvent.fire(),
     });
+
     if (!wsEndpoint)
       return null;
     await client._connect(wsEndpoint);
+
     return client;
   }
 }
@@ -85,6 +88,7 @@ export class BackendClient extends EventEmitter {
     this._transport.onmessage = (message: any) => {
       if (!message.id) {
         this.emit(message.method, message.params);
+
         return;
       }
       const pair = this._callbacks.get(message.id);

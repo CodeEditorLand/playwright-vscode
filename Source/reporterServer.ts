@@ -36,6 +36,7 @@ export class ReporterServer {
 
   async env() {
     const wsEndpoint = await this._listen();
+
     return {
       PW_TEST_REPORTER: require.resolve('./oopReporter'),
       PW_TEST_REPORTER_WS_ENDPOINT: wsEndpoint,
@@ -47,9 +48,11 @@ export class ReporterServer {
     server.on('error', error => console.error(error));
 
     const path = '/' + createGuid();
+
     const wsEndpoint = await new Promise<string>((resolve, reject) => {
       server.listen(0, () => {
         const address = server.address();
+
         if (!address) {
           reject(new Error('Could not bind server socket'));
           return;
@@ -72,7 +75,9 @@ export class ReporterServer {
 
   async wireTestListener(listener: reporterTypes.ReporterV2, token: vscodeTypes.CancellationToken) {
     let timeout: NodeJS.Timeout | undefined;
+
     const transport = await this._waitForTransport(token);
+
     if (transport === 'cancellationRequested')
       return;
 
@@ -89,6 +94,7 @@ export class ReporterServer {
     };
 
     token.onCancellationRequested(killTestProcess);
+
     if (token.isCancellationRequested)
       killTestProcess();
 
@@ -107,6 +113,7 @@ export class ReporterServer {
     };
 
     await new Promise<void>(f => transport.onclose = f);
+
     if (timeout)
       clearTimeout(timeout);
   }
@@ -116,6 +123,7 @@ export class ReporterServer {
       this._clientSocketPromise,
       new Promise<'cancellationRequested'>(f => token.onCancellationRequested(() => { this._close(); f('cancellationRequested'); }))
     ]);
+
     if (socket === 'cancellationRequested')
       return 'cancellationRequested';
 
@@ -146,6 +154,7 @@ export class ReporterServer {
       this._wsServer?.close();
       transport.onclose?.();
     });
+
     return transport;
   }
 }

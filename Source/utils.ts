@@ -71,12 +71,14 @@ export async function resolveSourceMap(file: string, fileToSources: Map<string, 
 
   if (lastLine?.startsWith('//# sourceMappingURL=')) {
     const sourceMappingFile = path.resolve(path.dirname(file), lastLine.substring('//# sourceMappingURL='.length));
+
     try {
       const sourceMapping = await fs.promises.readFile(sourceMappingFile, 'utf-8');
       const sources = JSON.parse(sourceMapping).sources;
       const sourcePaths = sources.map((s: string) => {
         const source = path.resolve(path.dirname(sourceMappingFile), s);
         sourceToFile.set(source, file);
+
         return source;
       });
       fileToSources.set(file, sourcePaths);
@@ -117,12 +119,15 @@ async function findNodeViaShell(vscode: vscodeTypes.VSCode, cwd: string): Promis
     return undefined;
   return new Promise<string | undefined>(resolve => {
     const startToken = '___START_PW_SHELL__';
+
     const endToken = '___END_PW_SHELL__';
+
     const childProcess = spawn(`${vscode.env.shell} -i -c 'echo ${startToken} && which node && echo ${endToken}'`, {
       stdio: 'pipe',
       shell: true,
       cwd,
     });
+
     let output = '';
     childProcess.stdout.on('data', data => output += data.toString());
     childProcess.on('error', () => resolve(undefined));

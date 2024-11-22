@@ -155,6 +155,7 @@ export class TeleReporterReceiver {
 
   dispatch(message: JsonEvent): Promise<void> | void {
     const { method, params } = message;
+
     if (method === 'onConfigure') {
       this._onConfigure(params.config);
       return;
@@ -193,6 +194,7 @@ export class TeleReporterReceiver {
     }
     if (method === 'onEnd')
       return this._onEnd(params.result);
+
     if (method === 'onExit')
       return this._onExit();
   }
@@ -205,6 +207,7 @@ export class TeleReporterReceiver {
 
   private _onProject(project: JsonProject) {
     let projectSuite = this._options.mergeProjects ? this._rootSuite.suites.find(suite => suite.project()!.name === project.name) : undefined;
+
     if (!projectSuite) {
       projectSuite = new TeleSuite(project.name, 'project');
       this._rootSuite.suites.push(projectSuite);
@@ -221,8 +224,10 @@ export class TeleReporterReceiver {
 
   private _onTestBegin(testId: string, payload: JsonTestResultStart) {
     const test = this._tests.get(testId)!;
+
     if (this._options.clearPreviousResultsWhenTestBegins)
       test._clearResults();
+
     const testResult = test._createTestResult(payload.id);
     testResult.retry = payload.retry;
     testResult.workerIndex = payload.workerIndex;
@@ -236,6 +241,7 @@ export class TeleReporterReceiver {
     test.timeout = testEndPayload.timeout;
     test.expectedStatus = testEndPayload.expectedStatus;
     test.annotations = testEndPayload.annotations;
+
     const result = test._resultsMap.get(payload.id)!;
     result.duration = payload.duration;
     result.status = payload.status;
@@ -249,13 +255,18 @@ export class TeleReporterReceiver {
 
   private _onStepBegin(testId: string, resultId: string, payload: JsonTestStepStart) {
     const test = this._tests.get(testId)!;
+
     const result = test._resultsMap.get(resultId)!;
+
     const parentStep = payload.parentStepId ? result._stepMap.get(payload.parentStepId) : undefined;
 
     const location = this._absoluteLocation(payload.location);
+
     const step = new TeleTestStep(payload, parentStep, location);
+
     if (parentStep)
       parentStep.steps.push(step);
+
     else
       result.steps.push(step);
     result._stepMap.set(payload.id, step);
@@ -264,7 +275,9 @@ export class TeleReporterReceiver {
 
   private _onStepEnd(testId: string, resultId: string, payload: JsonTestStepEnd) {
     const test = this._tests.get(testId)!;
+
     const result = test._resultsMap.get(resultId)!;
+
     const step = result._stepMap.get(payload.id)!;
     step.duration = payload.duration;
     step.error = payload.error;
@@ -277,8 +290,11 @@ export class TeleReporterReceiver {
 
   private _onStdIO(type: JsonStdIOType, testId: string | undefined, resultId: string | undefined, data: string, isBase64: boolean) {
     const chunk = isBase64 ? ((globalThis as any).Buffer ? Buffer.from(data, 'base64') : atob(data)) : data;
+
     const test = testId ? this._tests.get(testId) : undefined;
+
     const result = test && resultId ? test._resultsMap.get(resultId) : undefined;
+
     if (type === 'stdout') {
       result?.stdout.push(chunk);
       this._reporter.onStdOut?.(chunk, test, result);
@@ -302,6 +318,7 @@ export class TeleReporterReceiver {
 
   private _parseConfig(config: JsonConfig): reporterTypes.FullConfig {
     const result = { ...baseFullConfig, ...config };
+
     if (this._options.configOverrides) {
       result.configFile = this._options.configOverrides.configFile;
       result.reportSlowTests = this._options.configOverrides.reportSlowTests;
@@ -372,6 +389,7 @@ export class TeleReporterReceiver {
     test.location = this._absoluteLocation(payload.location);
     test.retries = payload.retries;
     test.tags = payload.tags ?? [];
+
     return test;
   }
 
@@ -380,6 +398,7 @@ export class TeleReporterReceiver {
   private _absoluteLocation(location: reporterTypes.Location | undefined): reporterTypes.Location | undefined {
     if (!location)
       return location;
+
     return {
       ...location,
       file: this._absolutePath(location.file),
@@ -391,6 +410,7 @@ export class TeleReporterReceiver {
   private _absolutePath(relativePath?: string): string | undefined {
     if (relativePath === undefined)
       return;
+
     return this._options.resolvePath(this._rootDir, relativePath);
   }
 }
@@ -415,15 +435,18 @@ export class TeleSuite implements reporterTypes.Suite {
 
   allTests(): TeleTestCase[] {
     const result: TeleTestCase[] = [];
+
     const visit = (suite: TeleSuite) => {
       for (const entry of [...suite.suites, ...suite.tests]) {
         if (entry instanceof TeleSuite)
           visit(entry);
+
         else
           result.push(entry);
       }
     };
     visit(this);
+
     return result;
   }
 
@@ -432,6 +455,7 @@ export class TeleSuite implements reporterTypes.Suite {
     // Ignore anonymous describe blocks.
     if (this.title || this._type !== 'describe')
       titlePath.push(this.title);
+
     return titlePath;
   }
 
@@ -467,12 +491,14 @@ export class TeleTestCase implements reporterTypes.TestCase {
   titlePath(): string[] {
     const titlePath = this.parent ? this.parent.titlePath() : [];
     titlePath.push(this.title);
+
     return titlePath;
   }
 
   outcome(): 'skipped' | 'expected' | 'unexpected' | 'flaky' {
     // Ignore initial skips that may be a result of "skipped because previous test in serial mode failed".
     const results = [...this.results];
+
     while (results[0]?.status === 'skipped' || results[0]?.status === 'interrupted')
       results.shift();
 
@@ -481,15 +507,19 @@ export class TeleTestCase implements reporterTypes.TestCase {
       return 'skipped';
 
     const failures = results.filter(result => result.status !== 'skipped' && result.status !== 'interrupted' && result.status !== this.expectedStatus);
+
     if (!failures.length) // all passed
       return 'expected';
+
     if (failures.length === results.length) // all failed
       return 'unexpected';
+
     return 'flaky'; // mixed bag
   }
 
   ok(): boolean {
     const status = this.outcome();
+
     return status === 'expected' || status === 'flaky' || status === 'skipped';
   }
 
@@ -502,6 +532,7 @@ export class TeleTestCase implements reporterTypes.TestCase {
     const result = new TeleTestResult(this.results.length);
     this.results.push(result);
     this._resultsMap.set(id, result);
+
     return result;
   }
 }
@@ -526,6 +557,7 @@ class TeleTestStep implements reporterTypes.TestStep {
 
   titlePath() {
     const parentPath = this.parent?.titlePath() || [];
+
     return [...parentPath, this.title];
   }
 
@@ -604,6 +636,7 @@ export function serializeRegexPatterns(patterns: string | RegExp | (string | Reg
   return patterns.map(s => {
     if (typeof s === 'string')
       return { s };
+
     return { r: { source: s.source, flags: s.flags } };
   });
 }
@@ -612,6 +645,7 @@ export function parseRegexPatterns(patterns: JsonPattern[]): (string | RegExp)[]
   return patterns.map(p => {
     if (p.s !== undefined)
       return p.s;
+
     return new RegExp(p.r!.source, p.r!.flags);
   });
 }

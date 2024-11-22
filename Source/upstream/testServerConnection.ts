@@ -56,17 +56,21 @@ export class TestServerConnection implements TestServerInterface, TestServerInte
       const { id, result, error, method, params } = message;
       if (id) {
         const callback = this._callbacks.get(id);
+
         if (!callback)
           return;
         this._callbacks.delete(id);
+
         if (error)
           callback.reject(new Error(error));
+
         else
           callback.resolve(result);
       } else {
         this._dispatchEvent(method, params);
       }
     });
+
     const pingInterval = setInterval(() => this._sendMessage('ping').catch(() => {}), 30000);
     this._connectedPromise = new Promise<void>((f, r) => {
       this._ws.addEventListener('open', () => f());
@@ -88,9 +92,12 @@ export class TestServerConnection implements TestServerInterface, TestServerInte
     logForTest?.({ method, params });
 
     await this._connectedPromise;
+
     const id = ++this._lastId;
+
     const message = { id, method, params };
     this._ws.send(JSON.stringify(message));
+
     return new Promise((resolve, reject) => {
       this._callbacks.set(id, { resolve, reject });
     });
@@ -103,12 +110,16 @@ export class TestServerConnection implements TestServerInterface, TestServerInte
   private _dispatchEvent(method: string, params?: any) {
     if (method === 'report')
       this._onReportEmitter.fire(params);
+
     else if (method === 'stdio')
       this._onStdioEmitter.fire(params);
+
     else if (method === 'listChanged')
       this._onListChangedEmitter.fire(params);
+
     else if (method === 'testFilesChanged')
       this._onTestFilesChangedEmitter.fire(params);
+
     else if (method === 'loadTraceRequested')
       this._onLoadTraceRequestedEmitter.fire(params);
   }

@@ -185,6 +185,7 @@ export class SettingsView extends DisposableBase implements vscodeTypes.WebviewV
         location: 'configToolbar',
       },
     ];
+
     if (this._view)
       this._view.webview.postMessage({ method: 'actions', params: { actions } });
   }
@@ -192,7 +193,9 @@ export class SettingsView extends DisposableBase implements vscodeTypes.WebviewV
   private _updateModels() {
     if (!this._view)
       return;
+
     const configs: ConfigEntry[] = [];
+
     const workspaceFolders = new Set<string>();
     this._models.enabledModels().forEach(model => workspaceFolders.add(model.config.workspaceFolder));
 
@@ -212,7 +215,9 @@ export class SettingsView extends DisposableBase implements vscodeTypes.WebviewV
 
   toggleModels() {
     const options: vscodeTypes.QuickPickItem[] = [];
+
     const itemMap = new Map<string, vscodeTypes.QuickPickItem>();
+
     const workspaceFolders = new Set<string>();
     this._models.models().forEach(model => workspaceFolders.add(model.config.workspaceFolder));
 
@@ -234,6 +239,7 @@ export class SettingsView extends DisposableBase implements vscodeTypes.WebviewV
         return;
       for (const model of this._models.models()) {
         const modelItem = itemMap.get(model.config.configFile);
+
         if (!modelItem)
           continue;
         this._models.setModelEnabled(model.config.configFile, !!result?.includes(modelItem), true);
@@ -301,6 +307,7 @@ function htmlForWebview(vscode: vscodeTypes.VSCode, extensionUri: vscodeTypes.Ur
       function updateProjects(projects) {
         const projectsElement = document.getElementById('projects');
         projectsElement.textContent = '';
+
         for (const project of projects) {
           const { name, enabled } = project;
           const div = document.createElement('div');
@@ -326,13 +333,17 @@ function htmlForWebview(vscode: vscodeTypes.VSCode, extensionUri: vscodeTypes.Ur
       }
       window.addEventListener('message', event => {
         const { method, params } = event.data;
+
         if (method === 'settings') {
           for (const [key, value] of Object.entries(params.settings)) {
             const input = document.querySelector('input[setting=' + key + ']');
+
             if (!input)
               continue;
+
             if (typeof value === 'boolean')
               input.checked = value;
+
             else
               input.value = value;
           }
@@ -345,11 +356,15 @@ function htmlForWebview(vscode: vscodeTypes.VSCode, extensionUri: vscodeTypes.Ur
           rareActionsElement.textContent = '';
           for (const action of params.actions) {
             const actionElement = document.createElement('div');
+
             if (action.hidden)
               continue;
+
             if (action.disabled)
               actionElement.setAttribute('disabled', 'true');
+
             const label = document.createElement('label');
+
             if (!action.disabled) {
               label.addEventListener('click', event => {
                 vscode.postMessage({ method: 'execute', params: { command: event.target.getAttribute('command') } });
@@ -357,16 +372,21 @@ function htmlForWebview(vscode: vscodeTypes.VSCode, extensionUri: vscodeTypes.Ur
             }
             label.setAttribute('role', 'button');
             label.setAttribute('command', action.command);
+
             const svg = document.createElement('svg');
             actionElement.appendChild(label);
             label.appendChild(svg);
+
             if (action.text)
               label.appendChild(document.createTextNode(action.text));
             label.title = action.title || action.text;
+
             if (action.location === 'configToolbar')
               configToolbarElement.appendChild(actionElement);
+
             else if (action.location === 'rareActions')
               rareActionsElement.appendChild(actionElement);
+
             else
               actionsElement.appendChild(actionElement);
             svg.outerHTML = action.svg;
@@ -378,10 +398,12 @@ function htmlForWebview(vscode: vscodeTypes.VSCode, extensionUri: vscodeTypes.Ur
           const configsMap = new Map();
           for (const config of configs) {
             configsMap.set(config.configFile, config);
+
             const option = document.createElement('option');
             option.value = config.configFile;
             option.textContent = config.label;
             select.appendChild(option);
+
             if (config.selected) {
               selectConfig = config;
               select.value = config.configFile;

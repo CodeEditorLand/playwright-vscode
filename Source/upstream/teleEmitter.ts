@@ -51,6 +51,7 @@ export class TeleReporterEmitter implements ReporterV2 {
 
   onBegin(suite: reporterTypes.Suite) {
     const projects = suite.suites.map(projectSuite => this._serializeProject(projectSuite));
+
     for (const project of projects)
       this._messageSink({ method: 'onProject', params: { project } });
     this._messageSink({ method: 'onBegin', params: undefined });
@@ -124,7 +125,9 @@ export class TeleReporterEmitter implements ReporterV2 {
   private _onStdIO(type: teleReceiver.JsonStdIOType, chunk: string | Buffer, test: void | reporterTypes.TestCase, result: void | reporterTypes.TestResult): void {
     if (this._emitterOptions.omitOutput)
       return;
+
     const isBase64 = typeof chunk !== 'string';
+
     const data = isBase64 ? chunk.toString('base64') : chunk;
     this._messageSink({
       method: 'onStdIO',
@@ -167,6 +170,7 @@ export class TeleReporterEmitter implements ReporterV2 {
 
   private _serializeProject(suite: reporterTypes.Suite): teleReceiver.JsonProject {
     const project = suite.project()!;
+
     const report: teleReceiver.JsonProject = {
       metadata: project.metadata,
       name: project.name,
@@ -186,6 +190,7 @@ export class TeleReporterEmitter implements ReporterV2 {
       snapshotDir: this._relativePath(project.snapshotDir),
       teardown: project.teardown,
     };
+
     return report;
   }
 
@@ -196,6 +201,7 @@ export class TeleReporterEmitter implements ReporterV2 {
       suites: suite.suites.map(s => this._serializeSuite(s)),
       tests: suite.tests.map(t => this._serializeTest(t)),
     };
+
     return result;
   }
 
@@ -264,6 +270,7 @@ export class TeleReporterEmitter implements ReporterV2 {
   private _relativeLocation(location: reporterTypes.Location | undefined): reporterTypes.Location | undefined {
     if (!location)
       return location;
+
     return {
       ...location,
       file: this._relativePath(location.file),
@@ -275,6 +282,7 @@ export class TeleReporterEmitter implements ReporterV2 {
   private _relativePath(absolutePath?: string): string | undefined {
     if (!absolutePath)
       return absolutePath;
+
     return path.relative(this._rootDir, absolutePath);
   }
 }

@@ -23,6 +23,7 @@ class TeleReporter extends TeleReporterEmitter {
 
   constructor(options: any) {
     let messageSink: (message: any) => void;
+
     if (options?._send) {
       messageSink = options._send;
     } else if (process.env.PW_TEST_REPORTER_WS_ENDPOINT) {

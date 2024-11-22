@@ -90,8 +90,10 @@ export class TestModel extends DisposableBase {
     this._collection = collection;
     this.config = { ...playwrightInfo, workspaceFolder, configFile };
     this._useLegacyCLIDriver = playwrightInfo.version < 1.44;
+
     if (this._useLegacyCLIDriver)
       this._playwrightTest = new PlaywrightTestCLI(this._vscode, this, collection.embedder);
+
     else
       this._playwrightTest = new PlaywrightTestServer(this._vscode, this, collection.embedder);
     this.tag = new this._vscode.TestTag(this.config.configFile);
@@ -108,12 +110,15 @@ export class TestModel extends DisposableBase {
     if (!this.isEnabled)
       return;
     await this._listFiles();
+
     if (configSettings) {
       let firstProject = true;
       for (const project of this.projects()) {
         const projectSettings = configSettings.projects.find(p => p.name === project.name);
+
         if (projectSettings)
           project.isEnabled = projectSettings.enabled;
+
         else if (firstProject)
           project.isEnabled = true;
         firstProject = false;
@@ -126,6 +131,7 @@ export class TestModel extends DisposableBase {
 
   dispose() {
     this.reset();
+
     super.dispose();
   }
 
@@ -166,13 +172,16 @@ export class TestModel extends DisposableBase {
 
   enabledProjectsFilter(): string[] {
     const allEnabled = !([...this._projects.values()].some(p => !p.isEnabled));
+
     if (allEnabled)
       return [];
+
     return this.enabledProjects().map(p => p.name);
   }
 
   enabledFiles(): Set<string> {
     const result = new Set<string>();
+
     for (const project of this.enabledProjects()) {
       const files = projectFiles(project);
       for (const file of files.keys())
@@ -183,7 +192,9 @@ export class TestModel extends DisposableBase {
 
   async _listFiles() {
     this._filesWithListedTests.clear();
+
     let report: ConfigListFilesReport;
+
     try {
       report = await this._playwrightTest.listFiles();
       for (const project of report.projects)
@@ -216,6 +227,7 @@ export class TestModel extends DisposableBase {
     }
 
     const projectsToKeep = new Set<string>();
+
     for (const projectReport of report.projects) {
       projectsToKeep.add(projectReport.name);
       let project = this._projects.get(projectReport.name);
@@ -250,6 +262,7 @@ export class TestModel extends DisposableBase {
       timeout: 0,
       use: projectReport.use,
     };
+
     const project: TestProject = {
       model: this,
       name: projectReport.name,
@@ -258,12 +271,15 @@ export class TestModel extends DisposableBase {
       isEnabled: false,
     };
     this._projects.set(project.name, project);
+
     return project;
   }
 
   private _updateProjectFiles(project: TestProject, projectReport: ProjectConfigWithFiles) {
     const filesToKeep = new Set<string>();
+
     const files = projectFiles(project);
+
     for (const file of projectReport.files) {
       filesToKeep.add(file);
       const testFile = files.get(file);
@@ -286,11 +302,14 @@ export class TestModel extends DisposableBase {
     const testDirs = [...new Set([...this._projects.values()].map(p => p.project.testDir))];
 
     const changed = this._mapFilesToSources(testDirs, change.changed);
+
     const created = this._mapFilesToSources(testDirs, change.created);
+
     const deleted = this._mapFilesToSources(testDirs, change.deleted);
 
     if (created.length || deleted.length)
       await this._listFiles();
+
     if (changed.length) {
       const changedWithListedTests = changed.filter(f => this._filesWithListedTests.has(f));
       for (const c of changedWithListedTests)
@@ -302,12 +321,16 @@ export class TestModel extends DisposableBase {
   testFilesChanged(testFiles: string[]) {
     if (!this._watches.size)
       return;
+
     if (!testFiles.length)
       return;
 
     const enabledFiles = this.enabledFiles();
+
     const files: string[] = [];
+
     const items: vscodeTypes.TestItem[] = [];
+
     for (const watch of this._watches || []) {
       for (const testFile of testFiles) {
         if (!watch.include) {
@@ -324,16 +347,19 @@ export class TestModel extends DisposableBase {
           // Folder is watched => add file.
           if (testFile.startsWith(include.uri.fsPath + path.sep)) {
             files.push(testFile);
+
             continue;
           }
           // File is watched => add file.
           if (testFile === include.uri.fsPath && !include.range) {
             items.push(include);
+
             continue;
           }
           // Test is watched, use that include as it might be more specific (test).
           if (testFile === include.uri.fsPath && include.range) {
             items.push(include);
+
             continue;
           }
         }
@@ -345,7 +371,9 @@ export class TestModel extends DisposableBase {
 
   async ensureTests(inputFiles: string[]): Promise<void> {
     const enabledFiles = this.enabledFiles();
+
     const filesToListTests = inputFiles.filter(f => enabledFiles.has(f) && !this._filesWithListedTests.has(f));
+
     if (!filesToListTests.length)
       return;
 
@@ -379,6 +407,7 @@ export class TestModel extends DisposableBase {
 
   private async _listTests(files: string[]) {
     const errors: reporterTypes.TestError[] = [];
+
     let rootSuite: reporterTypes.Suite | undefined;
     await this._playwrightTest.listTests(files, {
       onBegin: (suite: reporterTypes.Suite) => {
@@ -394,6 +423,7 @@ export class TestModel extends DisposableBase {
   private _updateProjects(newProjectSuites: reporterTypes.Suite[], requestedFiles: string[], errors: reporterTypes.TestError[]) {
     for (const requestedFile of requestedFiles)
       this._errorByFile.deleteAll(requestedFile);
+
     for (const error of errors) {
       if (error.location)
         this._errorByFile.set(error.location.file, error);
@@ -413,6 +443,7 @@ export class TestModel extends DisposableBase {
 
       for (const file of filesToClear) {
         const fileSuite = files.get(file);
+
         if (fileSuite) {
           fileSuite.suites = [];
           fileSuite.tests = [];
@@ -434,6 +465,7 @@ export class TestModel extends DisposableBase {
   private _updateFromRunningProject(project: TestProject, projectSuite: reporterTypes.Suite) {
     // When running tests, don't remove existing entries.
     const files = projectFiles(project);
+
     for (const fileSuite of projectSuite.suites) {
       if (!fileSuite.allTests().length)
         continue;
@@ -463,14 +495,17 @@ export class TestModel extends DisposableBase {
   needsGlobalHooks(type: 'setup' | 'teardown'): boolean {
     if (type === 'setup' && !this._ranGlobalSetup)
       return true;
+
     if (type === 'teardown' && this._ranGlobalSetup)
       return true;
+
     return false;
   }
 
   async runGlobalHooks(type: 'setup' | 'teardown', testListener: reporterTypes.ReporterV2, token: vscodeTypes.CancellationToken): Promise<reporterTypes.FullResult['status']> {
     if (!this.canRunGlobalHooks(type))
       return 'passed';
+
     if (type === 'setup') {
       if (!this.canRunGlobalHooks('setup'))
         return 'passed';
@@ -482,8 +517,10 @@ export class TestModel extends DisposableBase {
 
     if (!this._ranGlobalSetup)
       return 'passed';
+
     const status = await this._playwrightTest.runGlobalHooks('teardown', testListener, token);
     this._ranGlobalSetup = false;
+
     return status;
   }
 
@@ -498,7 +535,9 @@ export class TestModel extends DisposableBase {
   async startDevServer() {
     if (this._startedDevServer)
       return;
+
     const result = await this._playwrightTest.startDevServer();
+
     if (result === 'passed')
       this._startedDevServer = true;
   }
@@ -506,7 +545,9 @@ export class TestModel extends DisposableBase {
   async stopDevServer() {
     if (!this._startedDevServer)
       return;
+
     const result = await this._playwrightTest.stopDevServer();
+
     if (result === 'passed')
       this._startedDevServer = false;
   }
@@ -521,15 +562,19 @@ export class TestModel extends DisposableBase {
 
     // Run global setup with the first test.
     let globalSetupResult: reporterTypes.FullResult['status'] = 'passed';
+
     if (this.canRunGlobalHooks('setup'))
       globalSetupResult = await this.runGlobalHooks('setup', reporter, token);
+
     if (globalSetupResult !== 'passed')
       return;
 
     const externalOptions = await this._embedder.runHooks.onWillRunTests(this.config, false);
+
     const showBrowser = this._embedder.settingsModel.showBrowser.get() && !!externalOptions.connectWsEndpoint;
 
     let trace: 'on' | 'off' | undefined;
+
     let video: 'on' | 'off' | undefined;
 
     if (this._embedder.settingsModel.showTrace.get())
@@ -567,10 +612,12 @@ export class TestModel extends DisposableBase {
 
     // Underlying debugTest implementation will run the global setup.
     await this.runGlobalHooks('teardown', reporter, token);
+
     if (token?.isCancellationRequested)
       return;
 
     const externalOptions = await this._embedder.runHooks.onWillRunTests(this.config, true);
+
     const options: PlaywrightTestRunOptions = {
       headed: !this._embedder.isUnderTest,
       workers: 1,
@@ -579,6 +626,7 @@ export class TestModel extends DisposableBase {
       reuseContext: false,
       connectWsEndpoint: externalOptions.connectWsEndpoint,
     };
+
     try {
       if (token?.isCancellationRequested)
         return;
@@ -590,6 +638,7 @@ export class TestModel extends DisposableBase {
 
   private _mapFilesToSources(testDirs: string[], files: Set<string>): string[] {
     const result = new Set<string>();
+
     for (const file of files) {
       if (!testDirs.some(t => file.startsWith(t + path.sep)))
         continue;
@@ -614,6 +663,7 @@ export class TestModel extends DisposableBase {
         for (const wi of watch.include || []) {
           if (isAncestorOf(ri, wi)) {
             this._watches.delete(watch);
+
             break;
           }
         }
@@ -621,10 +671,12 @@ export class TestModel extends DisposableBase {
     }
 
     const filesToWatch = new Set<string>();
+
     for (const watch of this._watches) {
       if (!watch.include) {
         for (const file of this.enabledFiles())
           filesToWatch.add(file);
+
         continue;
       }
       for (const include of watch.include) {
@@ -639,8 +691,11 @@ export class TestModel extends DisposableBase {
   narrowDownLocations(items: vscodeTypes.TestItem[]): { locations: string[] | null, testIds?: string[] } {
     if (!items.length)
       return { locations: [] };
+
     const locations = new Set<string>();
+
     const testIds: string[] = [];
+
     for (const item of items) {
       const treeItem = upstreamTreeItem(item);
       if (treeItem.kind === 'group' && (treeItem.subKind === 'folder' || treeItem.subKind === 'file')) {
@@ -662,6 +717,7 @@ export class TestModel extends DisposableBase {
 
   updateTraceViewer(userGesture: boolean): TraceViewer | null {
     const settingsModel = this._embedder.settingsModel;
+
     if (!this._traceViewer && !settingsModel.showTrace.get())
       return null;
 
@@ -680,6 +736,7 @@ export class TestModel extends DisposableBase {
   private _checkVersion(version: number, message: string, userGesture?: boolean) {
     if (this.config.version >= version)
       return true;
+
     if (userGesture) {
       this._vscode.window.showWarningMessage(
           this._vscode.l10n.t('Playwright v{0}+ is required for {1} to work, v{2} found', version, message, this.config.version)
@@ -710,25 +767,33 @@ export class TestModelCollection extends DisposableBase {
 
   setModelEnabled(configFile: string, enabled: boolean, userGesture?: boolean) {
     const model = this._models.find(m => m.config.configFile === configFile);
+
     if (!model)
       return;
+
     if (model.isEnabled === enabled)
       return;
     model.isEnabled = enabled;
+
     if (userGesture)
       this._saveSettings();
     model.reset();
+
     const configSettings = this._configSettings(model.config);
     model._loadModelIfNeeded(configSettings).then(() => this._didUpdate.fire());
   }
 
   setProjectEnabled(configFile: string, name: string, enabled: boolean) {
     const model = this._models.find(m => m.config.configFile === configFile);
+
     if (!model)
       return;
+
     const project = model.projectMap().get(name);
+
     if (!project)
       return;
+
     if (project.isEnabled === enabled)
       return;
     project.isEnabled = enabled;
@@ -738,6 +803,7 @@ export class TestModelCollection extends DisposableBase {
 
   testDirs(): Set<string> {
     const result = new Set<string>();
+
     for (const model of this._models) {
       for (const dir of model.testDirs())
         result.add(dir);
@@ -748,6 +814,7 @@ export class TestModelCollection extends DisposableBase {
   async createModel(workspaceFolder: string, configFile: string, playwrightInfo: { cli: string, version: number }) {
     const model = new TestModel(this, workspaceFolder, configFile, playwrightInfo);
     this._models.push(model);
+
     const configSettings = this._configSettings(model.config);
     model.isEnabled = configSettings?.enabled || (this._models.length === 1 && !configSettings);
     await model._loadModelIfNeeded(configSettings);
@@ -760,6 +827,7 @@ export class TestModelCollection extends DisposableBase {
 
   private _configSettings(config: TestConfig) {
     const workspaceSettings = this.embedder.context.workspaceState.get(workspaceStateKey) as WorkspaceSettings || {};
+
     return (workspaceSettings.configs || []).find(c => c.relativeConfigFile === path.relative(config.workspaceFolder, config.configFile));
   }
 
@@ -774,8 +842,10 @@ export class TestModelCollection extends DisposableBase {
 
   versions(): Map<number, TestModel>{
     const versions = new Map<number, TestModel>();
+
     for (const model of this._models)
       versions.set(model.config.version, model);
+
     return versions;
   }
 
@@ -789,6 +859,7 @@ export class TestModelCollection extends DisposableBase {
   dispose() {
     for (const model of this._models)
       model.dispose();
+
     super.dispose();
   }
 
@@ -802,15 +873,18 @@ export class TestModelCollection extends DisposableBase {
 
   selectedModel(): TestModel | undefined {
     const enabledModels = this.enabledModels();
+
     if (!enabledModels.length) {
       this._selectedConfigFile = undefined;
       return undefined;
     }
 
     const model = enabledModels.find(m => m.config.configFile === this._selectedConfigFile);
+
     if (model)
       return model;
     this._selectedConfigFile = enabledModels[0].config.configFile;
+
     return enabledModels[0];
   }
 
@@ -822,6 +896,7 @@ export class TestModelCollection extends DisposableBase {
 
   private _saveSettings() {
     const workspaceSettings: WorkspaceSettings = { configs: [] };
+
     for (const model of this._models) {
       workspaceSettings.configs!.push({
         relativeConfigFile: path.relative(model.config.workspaceFolder, model.config.configFile),

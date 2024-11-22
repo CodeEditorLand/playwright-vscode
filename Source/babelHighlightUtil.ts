@@ -107,8 +107,10 @@ export function locatorForSourcePosition(text: string, vars: { pages: string[], 
       const isLineMatch = expressionNode.loc.start.line === position.line;
       if (isRangeMatch || isLineMatch) {
         let expression;
+
         if (pageSelectorNode)
           expression = `${pageSelectorCallee}.locator(${text.substring(pageSelectorNode.start!, pageSelectorNode.end!)})`;
+
         else
           expression = text.substring(expressionNode.start!, expressionNode.end!);
 

@@ -24,13 +24,17 @@ export default declare(api => {
     visitor: {
       ExpressionStatement(path) {
         const expression = path.node.expression;
+
         const isAwaitExpression = t.isAwaitExpression(expression);
+
         const isCallExpression = t.isCallExpression(expression);
+
         if (!isAwaitExpression && !isCallExpression)
           return;
         // Prevent re-enterability without calling path.skip.
         if (path.parentPath.isBlockStatement() && path.parentPath.parentPath.isTryStatement())
           return;
+
         if (isAwaitExpression && !t.isCallExpression(expression.argument))
           return;
         path.replaceWith(t.tryStatement(

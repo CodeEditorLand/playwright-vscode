@@ -74,16 +74,19 @@ export class PipeTransport implements ConnectionTransport {
 
   _dispatch(buffer: Buffer) {
     let end = buffer.indexOf('\0');
+
     if (end === -1) {
       this._pendingMessage += buffer.toString();
       return;
     }
     const message = this._pendingMessage + buffer.toString(undefined, 0, end);
+
     if (this.onmessage)
       this.onmessage.call(null, JSON.parse(message));
 
     let start = end + 1;
     end = buffer.indexOf('\0', start);
+
     while (end !== -1) {
       const message = buffer.toString(undefined, start, end);
       if (this.onmessage)
@@ -113,6 +116,7 @@ export class WebSocketTransport implements ConnectionTransport {
         transport._ws.close();
       });
     });
+
     return transport;
   }
 

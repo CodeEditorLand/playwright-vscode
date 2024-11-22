@@ -41,14 +41,18 @@ export class PlaywrightTestCLI {
 
   async listFiles(): Promise<ConfigListFilesReport> {
     const configFolder = path.dirname(this._model.config.configFile);
+
     const configFile = path.basename(this._model.config.configFile);
+
     const allArgs = [this._model.config.cli, 'list-files', '-c', configFile];
     {
       // For tests.
       this._log(`${escapeRegex(path.relative(this._model.config.workspaceFolder, configFolder))}> playwright list-files -c ${configFile}`);
     }
     const output = await this._runNode(allArgs, configFolder);
+
     const result = JSON.parse(output) as Partial<ConfigListFilesReport>;
+
     return {
       // list-files does not return `projects: []` if there is an error.
       projects: [],
@@ -77,18 +81,24 @@ export class PlaywrightTestCLI {
 
   async runTests(items: vscodeTypes.TestItem[], options: PlaywrightTestRunOptions, reporter: reporterTypes.ReporterV2, token: vscodeTypes.CancellationToken): Promise<void> {
     const { locations, parametrizedTestTitle } = this._narrowDownLocations(items);
+
     if (!locations)
       return;
+
     const args = [];
     this._model.enabledProjectsFilter().forEach(p => args.push(`--project=${p}`));
+
     if (parametrizedTestTitle)
       args.push(`--grep=${escapeRegex(parametrizedTestTitle)}`);
     args.push('--repeat-each=1');
     args.push('--retries=0');
+
     if (options.headed)
       args.push('--headed');
+
     if (options.workers)
       args.push(`--workers=${options.workers}`);
+
     if (options.trace)
       args.push(`--trace=${options.trace}`);
     await this._innerSpawn(locations, args, options, reporter, token);
@@ -101,9 +111,13 @@ export class PlaywrightTestCLI {
     // Playwright will restart itself as child process in the ESM mode and won't inherit the 3/4 pipes.
     // Always use ws transport to mitigate it.
     const reporterServer = new ReporterServer(this._vscode);
+
     const node = await findNode(this._vscode, this._model.config.workspaceFolder);
+
     const configFolder = path.dirname(this._model.config.configFile);
+
     const configFile = path.basename(this._model.config.configFile);
+
     const escapedLocations = locations.map(escapeRegex).sort();
 
     {
@@ -147,12 +161,18 @@ export class PlaywrightTestCLI {
 
   async debugTests(items: vscodeTypes.TestItem[], options: PlaywrightTestRunOptions, reporter: reporterTypes.ReporterV2, token: vscodeTypes.CancellationToken): Promise<void> {
     const configFolder = path.dirname(this._model.config.configFile);
+
     const configFile = path.basename(this._model.config.configFile);
+
     const { locations, parametrizedTestTitle } = this._narrowDownLocations(items);
+
     if (!locations)
       return;
+
     const testDirs = this._model.enabledProjects().map(p => p.project.testDir);
+
     const escapedLocations = locations.map(escapeRegex);
+
     const args: string[] = ['test',
       '-c', configFile,
       ...escapedLocations,
@@ -163,6 +183,7 @@ export class PlaywrightTestCLI {
       '--timeout', '0',
       '--workers', String(options.workers),
     ].filter(Boolean);
+
     if (parametrizedTestTitle)
       args.push(`--grep=${escapeRegex(parametrizedTestTitle)}`);
 
@@ -173,7 +194,9 @@ export class PlaywrightTestCLI {
     }
 
     const reporterServer = new ReporterServer(this._vscode);
+
     const testOptions = await this._options.runHooks.onWillRunTests(this._model.config, true);
+
     try {
       const debugEnd = new this._vscode.CancellationTokenSource();
       token.onCancellationRequested(() => debugEnd.cancel());
@@ -226,7 +249,9 @@ export class PlaywrightTestCLI {
 
   async findRelatedTestFiles(files: string[]): Promise<ConfigFindRelatedTestFilesReport> {
     const configFolder = path.dirname(this._model.config.configFile);
+
     const configFile = path.basename(this._model.config.configFile);
+
     const allArgs = [this._model.config.cli, 'find-related-test-files', '-c', configFile, ...files];
     {
       // For tests.
@@ -270,12 +295,14 @@ export class PlaywrightTestCLI {
           if (t.uri?.fsPath === test.uri?.fsPath && t.range?.start.line === test.range?.start.line)
             ++testsAtLocation;
         });
+
         if (testsAtLocation > 1)
           parametrizedTestTitle = test.label;
       }
     }
 
     const locations = new Set<string>();
+
     for (const item of items) {
       const itemFsPath = item.uri!.fsPath;
       const enabledFiles = this._model.enabledFiles();

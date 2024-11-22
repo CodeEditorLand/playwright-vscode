@@ -36,8 +36,11 @@ for (const packageName of packages) {
   }
   try {
     const packageJSON = require(packageJSONPath);
+
     const { version } = packageJSON;
+
     const v = parseFloat(version.replace(/-(next|beta)$/, ''));
+
     const cli = path.join(packageJSONPath, '../cli.js');
     console.log(JSON.stringify({ version: v, cli }, null, 2));
     process.exit(0);

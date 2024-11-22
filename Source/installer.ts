@@ -24,6 +24,7 @@ export async function installPlaywright(vscode: vscodeTypes.VSCode) {
   const [workspaceFolder] = vscode.workspace.workspaceFolders || [];
   if (!workspaceFolder) {
     await vscode.window.showErrorMessage('Please open a folder in VS Code to initialize Playwright. Either an empty folder or a folder with an existing package.json.');
+
     return;
   }
   const options: vscodeTypes.QuickPickItem[] = [];
@@ -118,26 +119,31 @@ const chromiumItem: vscodeTypes.QuickPickItem = {
   picked: true,
   description: '— powers Google Chrome, Microsoft Edge, etc\u2026',
 };
+
 const firefoxItem: vscodeTypes.QuickPickItem = {
   label: 'Firefox',
   picked: true,
   description: '— powers Mozilla Firefox',
 };
+
 const webkitItem: vscodeTypes.QuickPickItem = {
   label: 'WebKit',
   picked: true,
   description: '— powers  Apple Safari',
 };
+
 const addActionItem: vscodeTypes.QuickPickItem = {
   label: 'Add GitHub Actions workflow',
   picked: true,
   description: '— adds GitHub Actions recipe'
 };
+
 const useJavaScriptItem: vscodeTypes.QuickPickItem = {
   label: 'Use JavaScript',
   picked: false,
   description: '— use JavaScript (TypeScript is the default)'
 };
+
 const installDepsItem: vscodeTypes.QuickPickItem = {
   label: 'Install Linux dependencies',
   picked: false,

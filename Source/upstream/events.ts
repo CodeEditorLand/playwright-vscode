@@ -56,12 +56,16 @@ export class EventEmitter<T> {
 
   fire(event: T): void {
     const dispatch = !this._deliveryQueue;
+
     if (!this._deliveryQueue)
       this._deliveryQueue = [];
+
     for (const listener of this._listeners)
       this._deliveryQueue.push({ listener, event });
+
     if (!dispatch)
       return;
+
     for (let index = 0; index < this._deliveryQueue.length; index++) {
       const { listener, event } = this._deliveryQueue[index];
       listener.call(null, event);
@@ -71,6 +75,7 @@ export class EventEmitter<T> {
 
   dispose() {
     this._listeners.clear();
+
     if (this._deliveryQueue)
       this._deliveryQueue = [];
   }

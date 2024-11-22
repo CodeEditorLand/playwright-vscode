@@ -46,8 +46,10 @@ export class EmbeddedTraceViewer implements TraceViewer {
 
   async open(file?: string) {
     this._currentFile = file;
+
     if (!file && !this._traceViewerPanelPromise)
       return;
+
     const traceViewerPanel = await this._startIfNeeded();
     traceViewerPanel?.loadTraceRequested(file);
   }
@@ -61,18 +63,22 @@ export class EmbeddedTraceViewer implements TraceViewer {
   private async _startIfNeeded() {
     if (!this._traceViewerPanelPromise)
       this._traceViewerPanelPromise = this._createTraceViewerPanel();
+
     return await this._traceViewerPanelPromise;
   }
 
   private async _createTraceViewerPanel() {
     const serverUrlPrefix = await this._testServer.ensureStartedForTraceViewer();
+
     if (!serverUrlPrefix)
       return;
+
     return new EmbeddedTraceViewerPanel(this, serverUrlPrefix);
   }
 
   async infoForTest() {
     const traceViewerPanel = await this._traceViewerPanelPromise;
+
     return {
       type: 'embedded',
       serverUrlPrefix: traceViewerPanel?.serverUrlPrefix,
@@ -125,6 +131,7 @@ class EmbeddedTraceViewerPanel extends DisposableBase {
           return;
         this._isVisible = webviewPanel.visible;
         this._viewColumn = webviewPanel.viewColumn;
+
         if (this._isVisible) {
           this._applyTheme();
           this.loadTraceRequested(this._traceUrl);
@@ -134,6 +141,7 @@ class EmbeddedTraceViewerPanel extends DisposableBase {
       }),
       this._webviewPanel.webview.onDidReceiveMessage(message => {
         const methodRequest = this._extractMethodRequest(message);
+
         if (!methodRequest)
           return;
         this._executeMethod(methodRequest).catch(() => {});
@@ -152,6 +160,7 @@ class EmbeddedTraceViewerPanel extends DisposableBase {
 
   dispose() {
     this._clearTraceLoadRequestedTimeout();
+
     super.dispose();
   }
 
@@ -174,15 +183,19 @@ class EmbeddedTraceViewerPanel extends DisposableBase {
     if (!this._isVisible)
       return;
     this._webviewPanel.webview.postMessage({ method: 'loadTraceRequested', params: { traceUrl: this._traceUrl } });
+
     if (this._traceUrl?.endsWith('.json'))
       this._traceLoadRequestedTimeout = setTimeout(() => this._fireLoadTraceRequestedIfNeeded(), 500);
   }
 
   private _extractMethodRequest(message: any) {
     const method: string | undefined = message.method ?? message.command;
+
     if (!method)
       return;
+
     const params = message.params;
+
     return { method, params };
   }
 
@@ -191,8 +204,10 @@ class EmbeddedTraceViewerPanel extends DisposableBase {
       // should be a Uri, but due to https://github.com/microsoft/vscode/issues/85930
       // we pass a string instead
       await this._vscode.env.openExternal(params.url);
+
     else if (method === 'openSourceLocation' && params)
       await this._openSourceFile(params);
+
     else if (method === 'showErrorMessage')
       await this._vscode.window.showErrorMessage(params.message);
   }
@@ -212,15 +227,20 @@ class EmbeddedTraceViewerPanel extends DisposableBase {
   private _applyTheme() {
     if (!this._webviewPanel.visible)
       return;
+
     const themeKind = this._vscode.window.activeColorTheme.kind;
+
     const theme = [this._vscode.ColorThemeKind.Dark, this._vscode.ColorThemeKind.HighContrast].includes(themeKind) ? 'dark-mode' : 'light-mode';
     this._webviewPanel.webview.postMessage({ method: 'applyTheme', params: { theme } });
   }
 
   private _getHtml() {
     const nonce = getNonce();
+
     const cspSource = this._webviewPanel.webview.cspSource;
+
     const origin = new URL(this.serverUrlPrefix).origin;
+
     const stylesheet = this._webviewPanel.webview.asWebviewUri(this._vscode.Uri.joinPath(this._extensionUri, 'media', 'traceViewer.css'));
 
     return /* html */ `<!DOCTYPE html>
@@ -249,6 +269,7 @@ class EmbeddedTraceViewerPanel extends DisposableBase {
           function postMessageToFrame(data) {
             if (!loaded)
               pendingMessages.push(data);
+
             else
               iframe.contentWindow.postMessage(data, '*');
           }
@@ -256,6 +277,7 @@ class EmbeddedTraceViewerPanel extends DisposableBase {
             if (origin === '${origin}') {
               if (data.type === 'loaded') {
                 loaded = true;
+
                 for (const data of pendingMessages)
                   postMessageToFrame(data);
                 pendingMessages = [];

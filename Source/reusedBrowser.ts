@@ -69,6 +69,7 @@ export class ReusedBrowser implements vscodeTypes.Disposable {
 
   dispose() {
     this._stop();
+
     for (const d of this._disposables)
       d.dispose();
     this._disposables = [];
@@ -86,7 +87,9 @@ export class ReusedBrowser implements vscodeTypes.Disposable {
       'run-server',
       `--path=/${createGuid()}`
     ];
+
     const cwd = config.workspaceFolder;
+
     const envProvider = () => ({
       ...this._envProvider(),
       PW_CODEGEN_NO_INSPECTOR: '1',
@@ -98,7 +101,9 @@ export class ReusedBrowser implements vscodeTypes.Disposable {
       cwd,
       envProvider
     });
+
     const backend = await backendServer.startAndConnect();
+
     if (!backend)
       return;
     backend.onClose(() => {
@@ -143,8 +148,10 @@ export class ReusedBrowser implements vscodeTypes.Disposable {
       this._scheduleEdit(async () => {
         if (!this._editor)
           return;
+
         if (!params.actions || !params.actions.length)
           return;
+
         const targetIndentation = guessIndentation(this._editor);
 
         // Previous action committed, insert new line & collapse selection.
@@ -163,8 +170,11 @@ export class ReusedBrowser implements vscodeTypes.Disposable {
           await this._editor.edit(async editBuilder => {
             if (!this._editor)
               return;
+
             const action = params.actions[params.actions.length - 1];
+
             const newText = indentBlock(action, targetIndentation);
+
             if (this._editor.document.getText(this._editor.selection) !== newText)
               editBuilder.replace(this._editor.selection, newText);
           });
@@ -190,8 +200,10 @@ export class ReusedBrowser implements vscodeTypes.Disposable {
   private _pageCountChanged(pageCount: number) {
     this._pageCount = pageCount;
     this._onPageCountChangedEvent.fire(pageCount);
+
     if (this._isRunningTests)
       return;
+
     if (pageCount)
       return;
     this._stop();
@@ -203,10 +215,12 @@ export class ReusedBrowser implements vscodeTypes.Disposable {
 
   async inspect(models: TestModelCollection) {
     const selectedModel = models.selectedModel();
+
     if (!selectedModel || !this._checkVersion(selectedModel.config, 'selector picker'))
       return;
 
     await this._startBackendIfNeeded(selectedModel.config);
+
     try {
       await this._backend?.setMode({ mode: 'inspecting' });
     } catch (e) {
@@ -250,8 +264,10 @@ export class ReusedBrowser implements vscodeTypes.Disposable {
 
   async record(models: TestModelCollection, recordNew: boolean) {
     const selectedModel = models.selectedModel();
+
     if (!selectedModel || !this._checkVersion(selectedModel.config))
       return;
+
     if (!this.canRecord()) {
       this._vscode.window.showWarningMessage(
           this._vscode.l10n.t('Can\'t record while running tests')
@@ -280,6 +296,7 @@ export class ReusedBrowser implements vscodeTypes.Disposable {
     message: string = this._vscode.l10n.t('this feature')
   ): boolean {
     const version = 1.25;
+
     if (config.version < version) {
       this._vscode.window.showWarningMessage(
           this._vscode.l10n.t('Playwright v{0}+ is required for {1} to work, v{2} found', version, message, config.version)
@@ -299,9 +316,12 @@ export class ReusedBrowser implements vscodeTypes.Disposable {
 
   private async _doRecord(progress: vscodeTypes.Progress<{ message?: string; increment?: number }>, model: TestModel, recordNew: boolean, token: vscodeTypes.CancellationToken) {
     const startBackend = this._startBackendIfNeeded(model.config);
+
     let editor: vscodeTypes.TextEditor | undefined;
+
     if (recordNew)
       editor = await this._createFileForNewTest(model);
+
     else
       editor = this._vscode.window.activeTextEditor;
     await startBackend;
@@ -334,9 +354,12 @@ export class ReusedBrowser implements vscodeTypes.Disposable {
 
   private async _createFileForNewTest(model: TestModel) {
     const project = model.enabledProjects()[0];
+
     if (!project)
       return;
+
     let file;
+
     for (let i = 1; i < 100; ++i) {
       file = path.join(project.project.testDir, `test-${i}.spec.ts`);
       if (fs.existsSync(file))
@@ -353,14 +376,17 @@ test('test', async ({ page }) => {
 });`);
 
     const document = await this._vscode.workspace.openTextDocument(file);
+
     const editor = await this._vscode.window.showTextDocument(document);
     editor.selection = new this._vscode.Selection(new this._vscode.Position(3, 2), new this._vscode.Position(3, 2 + '// Recording...'.length));
+
     return editor;
   }
 
   async onWillRunTests(config: TestConfig, debug: boolean) {
     if (!this._settingsModel.showBrowser.get() && !debug)
       return;
+
     if (!this._checkVersion(config, 'Show & reuse browser'))
       return;
     this._pausedOnPagePause = false;
@@ -481,6 +507,7 @@ function guessIndentation(editor: vscodeTypes.TextEditor): number {
   const lineNumber = editor.selection.start.line;
   for (let i = lineNumber; i >= 0; --i) {
     const line = editor.document.lineAt(i);
+
     if (!line.isEmptyOrWhitespace)
       return line.firstNonWhitespaceCharacterIndex;
   }

@@ -69,12 +69,14 @@ export class TestTree extends DisposableBase {
   finishedLoading() {
     if (this._loadingItem.parent)
       this._loadingItem.parent.children.delete(this._loadingItem.id);
+
     else if (this._testController.items.get(this._loadingItem.id))
       this._testController.items.delete(this._loadingItem.id);
   }
 
   collectTestsInside(rootItem: vscodeTypes.TestItem): vscodeTypes.TestItem[] {
     const result: vscodeTypes.TestItem[] = [];
+
     const visitItem = (testItem: vscodeTypes.TestItem) => {
       const treeItem = (testItem as any)[testTreeItemSymbol] as upstream.TreeItem | undefined;
       if (!testItem)
@@ -85,6 +87,7 @@ export class TestTree extends DisposableBase {
         testItem.children.forEach(visitItem);
     };
     visitItem(rootItem);
+
     return result;
   }
 
@@ -101,6 +104,7 @@ export class TestTree extends DisposableBase {
       // Create root item if there are test files.
       if (upstreamTree.rootItem.children.length === 0) {
         this._deleteRootItem(workspaceFolder.uri.fsPath);
+
         continue;
       }
       const workspaceRootItem = this._createRootItemIfNeeded(workspaceFolder.uri);
@@ -116,8 +120,11 @@ export class TestTree extends DisposableBase {
 
   private _syncSuite(uItem: upstream.TreeItem, vsItem: vscodeTypes.TestItem) {
     const uChildren = uItem.children;
+
     const vsChildren = vsItem.children;
+
     const uChildrenById = new Map(uChildren.map(c => [c.id, c]));
+
     const vsChildrenById = new Map<string, vscodeTypes.TestItem>();
     vsChildren.forEach(c => {
       if (c.id.startsWith(this._testGeneration))
@@ -165,6 +172,7 @@ export class TestTree extends DisposableBase {
   private _indexTree() {
     this._testItemByTestId.clear();
     this._testItemByFile.clear();
+
     const visit = (item: vscodeTypes.TestItem) => {
       const treeItem = (item as any)[testTreeItemSymbol] as upstream.TreeItem | undefined;
       if ((treeItem?.kind === 'case' || treeItem?.kind === 'test') && treeItem.test)
@@ -174,6 +182,7 @@ export class TestTree extends DisposableBase {
       if (item.uri && !item.range)
         this._testItemByFile.set(item.uri.fsPath, item);
     };
+
     for (const item of this._rootItems.values())
       visit(item);
   }
@@ -181,7 +190,9 @@ export class TestTree extends DisposableBase {
   private _createRootItemIfNeeded(uri: vscodeTypes.Uri): vscodeTypes.TestItem {
     if (this._rootItems.has(uri.fsPath))
       return this._rootItems.get(uri.fsPath)!;
+
     let item: vscodeTypes.TestItem;
+
     if (this._vscode.workspace.workspaceFolders!.length === 1) {
       item = {
         id: this._idWithGeneration(uri.fsPath),
@@ -200,6 +211,7 @@ export class TestTree extends DisposableBase {
       this._testController.items.add(item);
     }
     this._rootItems.set(uri.fsPath, item);
+
     return item;
   }
 
