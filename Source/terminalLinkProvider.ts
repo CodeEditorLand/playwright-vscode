@@ -13,30 +13,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import * as vscodeTypes from './vscodeTypes';
+import * as vscodeTypes from "./vscodeTypes";
 
-export function registerTerminalLinkProvider(vscode: vscodeTypes.VSCode): vscodeTypes.Disposable {
-  return vscode.window.registerTerminalLinkProvider({
-    provideTerminalLinks: (context, token) => {
-      // The end is either two spaces (box is expanded) or the right box character (end of box is reached).
-      const supportedCommands = /((npx|pnpm exec|yarn) playwright (show-report|show-trace|install).*?)(  | ║|$)/;
-      const match = context.line.match(supportedCommands);
-      if (!match)
-        return [];
-      const command = match[1];
-      return [
-        {
-          command,
-          startIndex: match.index!,
-          length: command.length,
-          tooltip: `Run ${command}`,
-        }
-      ];
-    },
-    handleTerminalLink: (link: vscodeTypes.TerminalLink & { command: string }) => {
-      const terminal = vscode.window.activeTerminal;
-      if (terminal)
-        terminal.sendText(link.command);
-    }
-  });
+export function registerTerminalLinkProvider(
+	vscode: vscodeTypes.VSCode,
+): vscodeTypes.Disposable {
+	return vscode.window.registerTerminalLinkProvider({
+		provideTerminalLinks: (context, token) => {
+			// The end is either two spaces (box is expanded) or the right box character (end of box is reached).
+			const supportedCommands =
+				/((npx|pnpm exec|yarn) playwright (show-report|show-trace|install).*?)(  | ║|$)/;
+			const match = context.line.match(supportedCommands);
+			if (!match) return [];
+			const command = match[1];
+			return [
+				{
+					command,
+					startIndex: match.index!,
+					length: command.length,
+					tooltip: `Run ${command}`,
+				},
+			];
+		},
+		handleTerminalLink: (
+			link: vscodeTypes.TerminalLink & { command: string },
+		) => {
+			const terminal = vscode.window.activeTerminal;
+			if (terminal) terminal.sendText(link.command);
+		},
+	});
 }

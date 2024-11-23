@@ -14,105 +14,106 @@
  * limitations under the License.
  */
 
-import { ChildProcess, spawn } from 'child_process';
-import type { TestConfig } from './playwrightTestTypes';
-import { findNode } from './utils';
-import * as vscodeTypes from './vscodeTypes';
-import { TraceViewer } from './traceViewer';
+import { ChildProcess, spawn } from "child_process";
+
+import type { TestConfig } from "./playwrightTestTypes";
+import { TraceViewer } from "./traceViewer";
+import { findNode } from "./utils";
+import * as vscodeTypes from "./vscodeTypes";
 
 export class SpawnTraceViewer implements TraceViewer {
-  private _vscode: vscodeTypes.VSCode;
-  private _envProvider: () => NodeJS.ProcessEnv;
-  private _traceViewerProcess: ChildProcess | undefined;
-  private _currentFile?: string;
-  private _config: TestConfig;
-  private _serverUrlPrefixForTest?: string;
+	private _vscode: vscodeTypes.VSCode;
+	private _envProvider: () => NodeJS.ProcessEnv;
+	private _traceViewerProcess: ChildProcess | undefined;
+	private _currentFile?: string;
+	private _config: TestConfig;
+	private _serverUrlPrefixForTest?: string;
 
-  constructor(vscode: vscodeTypes.VSCode, envProvider: () => NodeJS.ProcessEnv, config: TestConfig) {
-    this._vscode = vscode;
-    this._envProvider = envProvider;
-    this._config = config;
-  }
+	constructor(
+		vscode: vscodeTypes.VSCode,
+		envProvider: () => NodeJS.ProcessEnv,
+		config: TestConfig,
+	) {
+		this._vscode = vscode;
+		this._envProvider = envProvider;
+		this._config = config;
+	}
 
-  currentFile() {
-    return this._currentFile;
-  }
+	currentFile() {
+		return this._currentFile;
+	}
 
-  async willRunTests() {
-    await this._startIfNeeded();
-  }
+	async willRunTests() {
+		await this._startIfNeeded();
+	}
 
-  async open(file?: string) {
-    this._currentFile = file;
+	async open(file?: string) {
+		this._currentFile = file;
 
-    if (!file && !this._traceViewerProcess)
-      return;
-    await this._startIfNeeded();
-    this._traceViewerProcess?.stdin?.write(file + '\n');
-  }
+		if (!file && !this._traceViewerProcess) return;
+		await this._startIfNeeded();
+		this._traceViewerProcess?.stdin?.write(file + "\n");
+	}
 
-  private async _startIfNeeded() {
-    const node = await findNode(this._vscode, this._config.workspaceFolder);
+	private async _startIfNeeded() {
+		const node = await findNode(this._vscode, this._config.workspaceFolder);
 
-    if (this._traceViewerProcess)
-      return;
+		if (this._traceViewerProcess) return;
 
-    const allArgs = [this._config.cli, 'show-trace', `--stdin`];
+		const allArgs = [this._config.cli, "show-trace", `--stdin`];
 
-    if (this._vscode.env.remoteName) {
-      allArgs.push('--host', '0.0.0.0');
-      allArgs.push('--port', '0');
-    }
-    const traceViewerProcess = spawn(node, allArgs, {
-      cwd: this._config.workspaceFolder,
-      stdio: 'pipe',
-      detached: true,
-      env: {
-        ...process.env,
-        ...this._envProvider(),
-      },
-    });
-    this._traceViewerProcess = traceViewerProcess;
+		if (this._vscode.env.remoteName) {
+			allArgs.push("--host", "0.0.0.0");
+			allArgs.push("--port", "0");
+		}
+		const traceViewerProcess = spawn(node, allArgs, {
+			cwd: this._config.workspaceFolder,
+			stdio: "pipe",
+			detached: true,
+			env: {
+				...process.env,
+				...this._envProvider(),
+			},
+		});
+		this._traceViewerProcess = traceViewerProcess;
 
-    const pipeLog = (data: Buffer) => {
-      if (!this._vscode.isUnderTest)
-        console.log(data.toString());
-    };
-    traceViewerProcess.stdout?.on('data', pipeLog);
-    traceViewerProcess.stderr?.on('data', pipeLog);
-    traceViewerProcess.on('exit', () => {
-      this._traceViewerProcess = undefined;
-      this._currentFile = undefined;
-    });
-    traceViewerProcess.on('error', error => {
-      this._vscode.window.showErrorMessage(error.message);
-      this.close();
-    });
+		const pipeLog = (data: Buffer) => {
+			if (!this._vscode.isUnderTest) console.log(data.toString());
+		};
+		traceViewerProcess.stdout?.on("data", pipeLog);
+		traceViewerProcess.stderr?.on("data", pipeLog);
+		traceViewerProcess.on("exit", () => {
+			this._traceViewerProcess = undefined;
+			this._currentFile = undefined;
+		});
+		traceViewerProcess.on("error", (error) => {
+			this._vscode.window.showErrorMessage(error.message);
+			this.close();
+		});
 
-    if (this._vscode.isUnderTest) {
-      traceViewerProcess.stdout?.on('data', data => {
-        const match = data.toString().match(/Listening on (.*)/);
+		if (this._vscode.isUnderTest) {
+			traceViewerProcess.stdout?.on("data", (data) => {
+				const match = data.toString().match(/Listening on (.*)/);
 
-        if (match)
-          this._serverUrlPrefixForTest = match[1];
-      });
-    }
-  }
+				if (match) this._serverUrlPrefixForTest = match[1];
+			});
+		}
+	}
 
-  close() {
-    this._traceViewerProcess?.stdin?.end();
-    this._traceViewerProcess = undefined;
-    this._currentFile = undefined;
-    this._serverUrlPrefixForTest = undefined;
-  }
+	close() {
+		this._traceViewerProcess?.stdin?.end();
+		this._traceViewerProcess = undefined;
+		this._currentFile = undefined;
+		this._serverUrlPrefixForTest = undefined;
+	}
 
-  async infoForTest() {
-    return {
-      type: 'spawn',
-      serverUrlPrefix: this._serverUrlPrefixForTest,
-      testConfigFile: this._config.configFile,
-      traceFile: this._currentFile,
-      visible: !!this._serverUrlPrefixForTest
-    };
-  }
+	async infoForTest() {
+		return {
+			type: "spawn",
+			serverUrlPrefix: this._serverUrlPrefixForTest,
+			testConfigFile: this._config.configFile,
+			traceFile: this._currentFile,
+			visible: !!this._serverUrlPrefixForTest,
+		};
+	}
 }

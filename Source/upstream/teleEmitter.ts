@@ -18,273 +18,338 @@
  * limitations under the License.
  */
 
-import path from 'path';
-import { createGuid } from '../utils';
-import type * as reporterTypes from './reporter';
-import type * as teleReceiver from './teleReceiver';
-import { serializeRegexPatterns } from './teleReceiver';
-import type { ReporterV2 } from './reporter';
+import path from "path";
+
+import { createGuid } from "../utils";
+import type * as reporterTypes from "./reporter";
+import type { ReporterV2 } from "./reporter";
+import type * as teleReceiver from "./teleReceiver";
+import { serializeRegexPatterns } from "./teleReceiver";
 
 export type TeleReporterEmitterOptions = {
-  omitOutput?: boolean;
-  omitBuffers?: boolean;
+	omitOutput?: boolean;
+	omitBuffers?: boolean;
 };
 
 export class TeleReporterEmitter implements ReporterV2 {
-  private _messageSink: (message: teleReceiver.JsonEvent) => void;
-  private _rootDir!: string;
-  private _emitterOptions: TeleReporterEmitterOptions;
+	private _messageSink: (message: teleReceiver.JsonEvent) => void;
+	private _rootDir!: string;
+	private _emitterOptions: TeleReporterEmitterOptions;
 
-  constructor(messageSink: (message: teleReceiver.JsonEvent) => void, options: TeleReporterEmitterOptions = {}) {
-    this._messageSink = messageSink;
-    this._emitterOptions = options;
-  }
+	constructor(
+		messageSink: (message: teleReceiver.JsonEvent) => void,
+		options: TeleReporterEmitterOptions = {},
+	) {
+		this._messageSink = messageSink;
+		this._emitterOptions = options;
+	}
 
-  version(): 'v2' {
-    return 'v2';
-  }
+	version(): "v2" {
+		return "v2";
+	}
 
-  onConfigure(config: reporterTypes.FullConfig) {
-    this._rootDir = config.rootDir;
-    this._messageSink({ method: 'onConfigure', params: { config: this._serializeConfig(config) } });
-  }
+	onConfigure(config: reporterTypes.FullConfig) {
+		this._rootDir = config.rootDir;
+		this._messageSink({
+			method: "onConfigure",
+			params: { config: this._serializeConfig(config) },
+		});
+	}
 
-  onBegin(suite: reporterTypes.Suite) {
-    const projects = suite.suites.map(projectSuite => this._serializeProject(projectSuite));
+	onBegin(suite: reporterTypes.Suite) {
+		const projects = suite.suites.map((projectSuite) =>
+			this._serializeProject(projectSuite),
+		);
 
-    for (const project of projects)
-      this._messageSink({ method: 'onProject', params: { project } });
-    this._messageSink({ method: 'onBegin', params: undefined });
-  }
+		for (const project of projects)
+			this._messageSink({ method: "onProject", params: { project } });
+		this._messageSink({ method: "onBegin", params: undefined });
+	}
 
-  onTestBegin(test: reporterTypes.TestCase, result: reporterTypes.TestResult): void {
-    (result as any)[idSymbol] = createGuid();
-    this._messageSink({
-      method: 'onTestBegin',
-      params: {
-        testId: test.id,
-        result: this._serializeResultStart(result)
-      }
-    });
-  }
+	onTestBegin(
+		test: reporterTypes.TestCase,
+		result: reporterTypes.TestResult,
+	): void {
+		(result as any)[idSymbol] = createGuid();
+		this._messageSink({
+			method: "onTestBegin",
+			params: {
+				testId: test.id,
+				result: this._serializeResultStart(result),
+			},
+		});
+	}
 
-  onTestEnd(test: reporterTypes.TestCase, result: reporterTypes.TestResult): void {
-    const testEnd: teleReceiver.JsonTestEnd = {
-      testId: test.id,
-      expectedStatus: test.expectedStatus,
-      annotations: test.annotations,
-      timeout: test.timeout,
-    };
-    this._messageSink({
-      method: 'onTestEnd',
-      params: {
-        test: testEnd,
-        result: this._serializeResultEnd(result),
-      }
-    });
-  }
+	onTestEnd(
+		test: reporterTypes.TestCase,
+		result: reporterTypes.TestResult,
+	): void {
+		const testEnd: teleReceiver.JsonTestEnd = {
+			testId: test.id,
+			expectedStatus: test.expectedStatus,
+			annotations: test.annotations,
+			timeout: test.timeout,
+		};
+		this._messageSink({
+			method: "onTestEnd",
+			params: {
+				test: testEnd,
+				result: this._serializeResultEnd(result),
+			},
+		});
+	}
 
-  onStepBegin(test: reporterTypes.TestCase, result: reporterTypes.TestResult, step: reporterTypes.TestStep): void {
-    (step as any)[idSymbol] = createGuid();
-    this._messageSink({
-      method: 'onStepBegin',
-      params: {
-        testId: test.id,
-        resultId: (result as any)[idSymbol],
-        step: this._serializeStepStart(step)
-      }
-    });
-  }
+	onStepBegin(
+		test: reporterTypes.TestCase,
+		result: reporterTypes.TestResult,
+		step: reporterTypes.TestStep,
+	): void {
+		(step as any)[idSymbol] = createGuid();
+		this._messageSink({
+			method: "onStepBegin",
+			params: {
+				testId: test.id,
+				resultId: (result as any)[idSymbol],
+				step: this._serializeStepStart(step),
+			},
+		});
+	}
 
-  onStepEnd(test: reporterTypes.TestCase, result: reporterTypes.TestResult, step: reporterTypes.TestStep): void {
-    this._messageSink({
-      method: 'onStepEnd',
-      params: {
-        testId: test.id,
-        resultId: (result as any)[idSymbol],
-        step: this._serializeStepEnd(step)
-      }
-    });
-  }
+	onStepEnd(
+		test: reporterTypes.TestCase,
+		result: reporterTypes.TestResult,
+		step: reporterTypes.TestStep,
+	): void {
+		this._messageSink({
+			method: "onStepEnd",
+			params: {
+				testId: test.id,
+				resultId: (result as any)[idSymbol],
+				step: this._serializeStepEnd(step),
+			},
+		});
+	}
 
-  onError(error: reporterTypes.TestError): void {
-    this._messageSink({
-      method: 'onError',
-      params: { error }
-    });
-  }
+	onError(error: reporterTypes.TestError): void {
+		this._messageSink({
+			method: "onError",
+			params: { error },
+		});
+	}
 
-  onStdOut(chunk: string | Buffer, test?: reporterTypes.TestCase, result?: reporterTypes.TestResult): void {
-    this._onStdIO('stdout', chunk, test, result);
-  }
+	onStdOut(
+		chunk: string | Buffer,
+		test?: reporterTypes.TestCase,
+		result?: reporterTypes.TestResult,
+	): void {
+		this._onStdIO("stdout", chunk, test, result);
+	}
 
-  onStdErr(chunk: string | Buffer, test?: reporterTypes.TestCase, result?: reporterTypes.TestResult): void {
-    this._onStdIO('stderr', chunk, test, result);
-  }
+	onStdErr(
+		chunk: string | Buffer,
+		test?: reporterTypes.TestCase,
+		result?: reporterTypes.TestResult,
+	): void {
+		this._onStdIO("stderr", chunk, test, result);
+	}
 
-  private _onStdIO(type: teleReceiver.JsonStdIOType, chunk: string | Buffer, test: void | reporterTypes.TestCase, result: void | reporterTypes.TestResult): void {
-    if (this._emitterOptions.omitOutput)
-      return;
+	private _onStdIO(
+		type: teleReceiver.JsonStdIOType,
+		chunk: string | Buffer,
+		test: void | reporterTypes.TestCase,
+		result: void | reporterTypes.TestResult,
+	): void {
+		if (this._emitterOptions.omitOutput) return;
 
-    const isBase64 = typeof chunk !== 'string';
+		const isBase64 = typeof chunk !== "string";
 
-    const data = isBase64 ? chunk.toString('base64') : chunk;
-    this._messageSink({
-      method: 'onStdIO',
-      params: { testId: test?.id, resultId: result ? (result as any)[idSymbol] : undefined, type, data, isBase64 }
-    });
-  }
+		const data = isBase64 ? chunk.toString("base64") : chunk;
+		this._messageSink({
+			method: "onStdIO",
+			params: {
+				testId: test?.id,
+				resultId: result ? (result as any)[idSymbol] : undefined,
+				type,
+				data,
+				isBase64,
+			},
+		});
+	}
 
-  async onEnd(result: reporterTypes.FullResult) {
-    const resultPayload: teleReceiver.JsonFullResult = {
-      status: result.status,
-      startTime: result.startTime.getTime(),
-      duration: result.duration,
-    };
-    this._messageSink({
-      method: 'onEnd',
-      params: {
-        result: resultPayload
-      }
-    });
-  }
+	async onEnd(result: reporterTypes.FullResult) {
+		const resultPayload: teleReceiver.JsonFullResult = {
+			status: result.status,
+			startTime: result.startTime.getTime(),
+			duration: result.duration,
+		};
+		this._messageSink({
+			method: "onEnd",
+			params: {
+				result: resultPayload,
+			},
+		});
+	}
 
-  async onExit() {
-  }
+	async onExit() {}
 
-  printsToStdio() {
-    return false;
-  }
+	printsToStdio() {
+		return false;
+	}
 
-  private _serializeConfig(config: reporterTypes.FullConfig): teleReceiver.JsonConfig {
-    return {
-      configFile: this._relativePath(config.configFile),
-      globalTimeout: config.globalTimeout,
-      maxFailures: config.maxFailures,
-      metadata: config.metadata,
-      rootDir: config.rootDir,
-      version: config.version,
-      workers: config.workers,
-    };
-  }
+	private _serializeConfig(
+		config: reporterTypes.FullConfig,
+	): teleReceiver.JsonConfig {
+		return {
+			configFile: this._relativePath(config.configFile),
+			globalTimeout: config.globalTimeout,
+			maxFailures: config.maxFailures,
+			metadata: config.metadata,
+			rootDir: config.rootDir,
+			version: config.version,
+			workers: config.workers,
+		};
+	}
 
-  private _serializeProject(suite: reporterTypes.Suite): teleReceiver.JsonProject {
-    const project = suite.project()!;
+	private _serializeProject(
+		suite: reporterTypes.Suite,
+	): teleReceiver.JsonProject {
+		const project = suite.project()!;
 
-    const report: teleReceiver.JsonProject = {
-      metadata: project.metadata,
-      name: project.name,
-      outputDir: this._relativePath(project.outputDir),
-      repeatEach: project.repeatEach,
-      retries: project.retries,
-      testDir: this._relativePath(project.testDir),
-      testIgnore: serializeRegexPatterns(project.testIgnore),
-      testMatch: serializeRegexPatterns(project.testMatch),
-      timeout: project.timeout,
-      suites: suite.suites.map(fileSuite => {
-        return this._serializeSuite(fileSuite);
-      }),
-      grep: serializeRegexPatterns(project.grep),
-      grepInvert: serializeRegexPatterns(project.grepInvert || []),
-      dependencies: project.dependencies,
-      snapshotDir: this._relativePath(project.snapshotDir),
-      teardown: project.teardown,
-    };
+		const report: teleReceiver.JsonProject = {
+			metadata: project.metadata,
+			name: project.name,
+			outputDir: this._relativePath(project.outputDir),
+			repeatEach: project.repeatEach,
+			retries: project.retries,
+			testDir: this._relativePath(project.testDir),
+			testIgnore: serializeRegexPatterns(project.testIgnore),
+			testMatch: serializeRegexPatterns(project.testMatch),
+			timeout: project.timeout,
+			suites: suite.suites.map((fileSuite) => {
+				return this._serializeSuite(fileSuite);
+			}),
+			grep: serializeRegexPatterns(project.grep),
+			grepInvert: serializeRegexPatterns(project.grepInvert || []),
+			dependencies: project.dependencies,
+			snapshotDir: this._relativePath(project.snapshotDir),
+			teardown: project.teardown,
+		};
 
-    return report;
-  }
+		return report;
+	}
 
-  private _serializeSuite(suite: reporterTypes.Suite): teleReceiver.JsonSuite {
-    const result = {
-      title: suite.title,
-      location: this._relativeLocation(suite.location),
-      suites: suite.suites.map(s => this._serializeSuite(s)),
-      tests: suite.tests.map(t => this._serializeTest(t)),
-    };
+	private _serializeSuite(
+		suite: reporterTypes.Suite,
+	): teleReceiver.JsonSuite {
+		const result = {
+			title: suite.title,
+			location: this._relativeLocation(suite.location),
+			suites: suite.suites.map((s) => this._serializeSuite(s)),
+			tests: suite.tests.map((t) => this._serializeTest(t)),
+		};
 
-    return result;
-  }
+		return result;
+	}
 
-  private _serializeTest(test: reporterTypes.TestCase): teleReceiver.JsonTestCase {
-    return {
-      testId: test.id,
-      title: test.title,
-      location: this._relativeLocation(test.location),
-      retries: test.retries,
-      tags: test.tags,
-      repeatEachIndex: test.repeatEachIndex,
-    };
-  }
+	private _serializeTest(
+		test: reporterTypes.TestCase,
+	): teleReceiver.JsonTestCase {
+		return {
+			testId: test.id,
+			title: test.title,
+			location: this._relativeLocation(test.location),
+			retries: test.retries,
+			tags: test.tags,
+			repeatEachIndex: test.repeatEachIndex,
+		};
+	}
 
-  private _serializeResultStart(result: reporterTypes.TestResult): teleReceiver.JsonTestResultStart {
-    return {
-      id: (result as any)[idSymbol],
-      retry: result.retry,
-      workerIndex: result.workerIndex,
-      parallelIndex: result.parallelIndex,
-      startTime: +result.startTime,
-    };
-  }
+	private _serializeResultStart(
+		result: reporterTypes.TestResult,
+	): teleReceiver.JsonTestResultStart {
+		return {
+			id: (result as any)[idSymbol],
+			retry: result.retry,
+			workerIndex: result.workerIndex,
+			parallelIndex: result.parallelIndex,
+			startTime: +result.startTime,
+		};
+	}
 
-  private _serializeResultEnd(result: reporterTypes.TestResult): teleReceiver.JsonTestResultEnd {
-    return {
-      id: (result as any)[idSymbol],
-      duration: result.duration,
-      status: result.status,
-      errors: result.errors,
-      attachments: this._serializeAttachments(result.attachments),
-    };
-  }
+	private _serializeResultEnd(
+		result: reporterTypes.TestResult,
+	): teleReceiver.JsonTestResultEnd {
+		return {
+			id: (result as any)[idSymbol],
+			duration: result.duration,
+			status: result.status,
+			errors: result.errors,
+			attachments: this._serializeAttachments(result.attachments),
+		};
+	}
 
-  _serializeAttachments(attachments: reporterTypes.TestResult['attachments']): teleReceiver.JsonAttachment[] {
-    return attachments.map(a => {
-      return {
-        ...a,
-        // There is no Buffer in the browser, so there is no point in sending the data there.
-        base64: (a.body && !this._emitterOptions.omitBuffers) ? a.body.toString('base64') : undefined,
-      };
-    });
-  }
+	_serializeAttachments(
+		attachments: reporterTypes.TestResult["attachments"],
+	): teleReceiver.JsonAttachment[] {
+		return attachments.map((a) => {
+			return {
+				...a,
+				// There is no Buffer in the browser, so there is no point in sending the data there.
+				base64:
+					a.body && !this._emitterOptions.omitBuffers
+						? a.body.toString("base64")
+						: undefined,
+			};
+		});
+	}
 
-  private _serializeStepStart(step: reporterTypes.TestStep): teleReceiver.JsonTestStepStart {
-    return {
-      id: (step as any)[idSymbol],
-      parentStepId: (step.parent as any)?.[idSymbol],
-      title: step.title,
-      category: step.category,
-      startTime: +step.startTime,
-      location: this._relativeLocation(step.location),
-    };
-  }
+	private _serializeStepStart(
+		step: reporterTypes.TestStep,
+	): teleReceiver.JsonTestStepStart {
+		return {
+			id: (step as any)[idSymbol],
+			parentStepId: (step.parent as any)?.[idSymbol],
+			title: step.title,
+			category: step.category,
+			startTime: +step.startTime,
+			location: this._relativeLocation(step.location),
+		};
+	}
 
-  private _serializeStepEnd(step: reporterTypes.TestStep): teleReceiver.JsonTestStepEnd {
-    return {
-      id: (step as any)[idSymbol],
-      duration: step.duration,
-      error: step.error,
-    };
-  }
+	private _serializeStepEnd(
+		step: reporterTypes.TestStep,
+	): teleReceiver.JsonTestStepEnd {
+		return {
+			id: (step as any)[idSymbol],
+			duration: step.duration,
+			error: step.error,
+		};
+	}
 
-  private _relativeLocation(location: reporterTypes.Location): reporterTypes.Location;
-  private _relativeLocation(location?: reporterTypes.Location): reporterTypes.Location | undefined;
-  private _relativeLocation(location: reporterTypes.Location | undefined): reporterTypes.Location | undefined {
-    if (!location)
-      return location;
+	private _relativeLocation(
+		location: reporterTypes.Location,
+	): reporterTypes.Location;
+	private _relativeLocation(
+		location?: reporterTypes.Location,
+	): reporterTypes.Location | undefined;
+	private _relativeLocation(
+		location: reporterTypes.Location | undefined,
+	): reporterTypes.Location | undefined {
+		if (!location) return location;
 
-    return {
-      ...location,
-      file: this._relativePath(location.file),
-    };
-  }
+		return {
+			...location,
+			file: this._relativePath(location.file),
+		};
+	}
 
-  private _relativePath(absolutePath: string): string;
-  private _relativePath(absolutePath?: string): string | undefined;
-  private _relativePath(absolutePath?: string): string | undefined {
-    if (!absolutePath)
-      return absolutePath;
+	private _relativePath(absolutePath: string): string;
+	private _relativePath(absolutePath?: string): string | undefined;
+	private _relativePath(absolutePath?: string): string | undefined {
+		if (!absolutePath) return absolutePath;
 
-    return path.relative(this._rootDir, absolutePath);
-  }
+		return path.relative(this._rootDir, absolutePath);
+	}
 }
 
-const idSymbol = Symbol('id');
+const idSymbol = Symbol("id");
