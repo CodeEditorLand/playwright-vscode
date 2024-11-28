@@ -20,11 +20,15 @@ import traverseFunc from "@babel/traverse";
 export { types as t } from "@babel/core";
 
 export { parse };
+
 export type ParseResult = ReturnType<typeof parse>;
 
 export const traverse = traverseFunc;
+
 export type { SourceLocation } from "@babel/types";
+
 export { declare } from "@babel/helper-plugin-utils";
 
 export const babelPluginProposalDecorators = require("@babel/plugin-proposal-decorators");
+
 export const babelPresetTypescript = require("@babel/preset-typescript");

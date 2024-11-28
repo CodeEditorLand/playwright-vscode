@@ -17,13 +17,16 @@
 /* eslint-disable quotes */
 
 export type Annotation = any;
+
 export type Metadata = unknown;
+
 export type TestStatus =
 	| "passed"
 	| "failed"
 	| "timedOut"
 	| "skipped"
 	| "interrupted";
+
 export type FullConfig = {
 	configFile: string;
 	version: string;
@@ -47,6 +50,7 @@ export type FullConfig = {
 	webServer?: unknown;
 	workers?: number;
 };
+
 export type FullProject = {
 	name: string;
 	testDir: string;

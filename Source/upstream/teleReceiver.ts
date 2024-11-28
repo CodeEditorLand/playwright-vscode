@@ -22,8 +22,11 @@ import type { Annotation, FullProject, Metadata, ReporterV2 } from "./reporter";
 import type * as reporterTypes from "./reporter";
 
 export type StringIntern = (s: string) => string;
+
 export type JsonLocation = reporterTypes.Location;
+
 export type JsonError = string;
+
 export type JsonStackFrame = { file: string; line: number; column: number };
 
 export type JsonStdIOType = "stdout" | "stderr";
