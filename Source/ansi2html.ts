@@ -19,12 +19,17 @@ export function ansi2html(
 	defaultColors?: { bg: string; fg: string },
 ): string {
 	const regex = /(\x1b\[(\d+(;\d+)*)m)|([^\x1b]+)/g;
+
 	const tokens: string[] = [];
+
 	let match;
+
 	let style: any = {};
 
 	let reverse = false;
+
 	let fg: string | undefined = defaultColors?.fg;
+
 	let bg: string | undefined = defaultColors?.bg;
 
 	while ((match = regex.exec(text)) !== null) {
@@ -32,58 +37,76 @@ export function ansi2html(
 
 		if (codeStr) {
 			const code = +codeStr;
+
 			switch (code) {
 				case 0:
 					style = {};
+
 					break;
 
 				case 1:
 					style["font-weight"] = "bold";
+
 					break;
 
 				case 2:
 					style["opacity"] = "0.8";
+
 					break;
 
 				case 3:
 					style["font-style"] = "italic";
+
 					break;
 
 				case 4:
 					style["text-decoration"] = "underline";
+
 					break;
 
 				case 7:
 					reverse = true;
+
 					break;
 
 				case 8:
 					style.display = "none";
+
 					break;
 
 				case 9:
 					style["text-decoration"] = "line-through";
+
 					break;
 
 				case 22:
 					delete style["font-weight"];
+
 					delete style["font-style"];
+
 					delete style["opacity"];
+
 					delete style["text-decoration"];
+
 					break;
 
 				case 23:
 					delete style["font-weight"];
+
 					delete style["font-style"];
+
 					delete style["opacity"];
+
 					break;
 
 				case 24:
 					delete style["text-decoration"];
+
 					break;
 
 				case 27:
 					reverse = false;
+
 					break;
 
 				case 30:
@@ -95,10 +118,12 @@ export function ansi2html(
 				case 36:
 				case 37:
 					fg = ansiColors[code - 30];
+
 					break;
 
 				case 39:
 					fg = defaultColors?.fg;
+
 					break;
 
 				case 40:
@@ -110,14 +135,17 @@ export function ansi2html(
 				case 46:
 				case 47:
 					bg = ansiColors[code - 40];
+
 					break;
 
 				case 49:
 					bg = defaultColors?.bg;
+
 					break;
 
 				case 53:
 					style["text-decoration"] = "overline";
+
 					break;
 
 				case 90:
@@ -129,6 +157,7 @@ export function ansi2html(
 				case 96:
 				case 97:
 					fg = brightAnsiColors[code - 90];
+
 					break;
 
 				case 100:
@@ -140,24 +169,37 @@ export function ansi2html(
 				case 106:
 				case 107:
 					bg = brightAnsiColors[code - 100];
+
 					break;
 			}
 		} else if (text) {
 			let token = escapeHTML(text);
+
 			const isBold = style["font-weight"] === "bold";
+
 			if (isBold) token = `<b>${token}</b>`;
+
 			const isItalic = style["font-style"] === "italic";
+
 			if (isItalic) token = `<i>${token}</i>`;
+
 			const hasOpacity = style["opacity"] === "0.8";
+
 			if (hasOpacity) token = `<span style='color:#666;'>${token}</span>`;
+
 			const color = reverse ? bg || "#000" : fg;
+
 			if (color) token = `<span style='color:${color};'>${token}</span>`;
+
 			const backgroundColor = reverse ? fg : bg;
+
 			if (backgroundColor)
 				token = `<span style='background-color:${backgroundColor};'>${token}</span>`;
+
 			tokens.push(token);
 		}
 	}
+
 	return tokens.join("");
 }
 

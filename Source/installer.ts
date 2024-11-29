@@ -23,6 +23,7 @@ import * as vscodeTypes from "./vscodeTypes";
 
 export async function installPlaywright(vscode: vscodeTypes.VSCode) {
 	const [workspaceFolder] = vscode.workspace.workspaceFolders || [];
+
 	if (!workspaceFolder) {
 		await vscode.window.showErrorMessage(
 			"Please open a folder in VS Code to initialize Playwright. Either an empty folder or a folder with an existing package.json.",
@@ -30,23 +31,33 @@ export async function installPlaywright(vscode: vscodeTypes.VSCode) {
 
 		return;
 	}
+
 	const options: vscodeTypes.QuickPickItem[] = [];
+
 	options.push({
 		label: "Select browsers to install",
 		kind: vscode.QuickPickItemKind.Separator,
 	});
+
 	options.push(chromiumItem, firefoxItem, webkitItem);
+
 	options.push({ label: "", kind: vscode.QuickPickItemKind.Separator });
+
 	options.push(useJavaScriptItem);
+
 	options.push(addActionItem);
+
 	if (process.platform === "linux") {
 		updateInstallDepsPicked();
+
 		options.push(installDepsItem);
 	}
+
 	const result = await vscode.window.showQuickPick(options, {
 		title: "Install Playwright",
 		canPickMany: true,
 	});
+
 	if (result === undefined) return;
 
 	const terminal = vscode.window.createTerminal({
@@ -58,17 +69,24 @@ export async function installPlaywright(vscode: vscodeTypes.VSCode) {
 	terminal.show();
 
 	const args: string[] = [];
+
 	if (result.includes(chromiumItem)) args.push("--browser=chromium");
+
 	if (result.includes(firefoxItem)) args.push("--browser=firefox");
+
 	if (result.includes(webkitItem)) args.push("--browser=webkit");
+
 	if (
 		!result.includes(chromiumItem) &&
 		!result.includes(firefoxItem) &&
 		!result.includes(webkitItem)
 	)
 		args.push("--no-browsers");
+
 	if (result.includes(useJavaScriptItem)) args.push("--lang=js");
+
 	if (result.includes(addActionItem)) args.push("--gha");
+
 	if (result.includes(installDepsItem)) args.push("--install-deps");
 
 	terminal.sendText(
@@ -86,20 +104,27 @@ export async function installBrowsers(
 	model: TestModel,
 ) {
 	const options: vscodeTypes.QuickPickItem[] = [];
+
 	options.push({
 		label: "Select browsers to install",
 		kind: vscode.QuickPickItemKind.Separator,
 	});
+
 	options.push(chromiumItem, firefoxItem, webkitItem);
+
 	options.push({ label: "", kind: vscode.QuickPickItemKind.Separator });
+
 	if (process.platform === "linux") {
 		updateInstallDepsPicked();
+
 		options.push(installDepsItem);
 	}
+
 	const result = await vscode.window.showQuickPick(options, {
 		title: `Install browsers for Playwright v${model.config.version}:`,
 		canPickMany: true,
 	});
+
 	if (!result?.length) return;
 
 	const terminal = vscode.window.createTerminal({
@@ -111,11 +136,15 @@ export async function installBrowsers(
 	terminal.show();
 
 	const args: string[] = [];
+
 	const installCommand = result.includes(installDepsItem)
 		? "install --with-deps"
 		: "install";
+
 	if (result.includes(chromiumItem)) args.push("chromium");
+
 	if (result.includes(firefoxItem)) args.push("firefox");
+
 	if (result.includes(webkitItem)) args.push("webkit");
 
 	if (args.length)
@@ -123,6 +152,7 @@ export async function installBrowsers(
 			`npx playwright ${installCommand} ${args.join(" ")}`,
 			true,
 		);
+
 	else if (result.includes(installDepsItem))
 		terminal.sendText(`npx playwright install-deps`, true);
 }

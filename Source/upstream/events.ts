@@ -32,22 +32,29 @@ export class EventEmitter<T> {
 	public event: Event<T>;
 
 	private _deliveryQueue?: { listener: (e: T) => void; event: T }[];
+
 	private _listeners = new Set<(e: T) => void>();
 
 	constructor() {
 		this.event = (listener: (e: T) => any, disposables?: Disposable[]) => {
 			this._listeners.add(listener);
+
 			let disposed = false;
+
 			const self = this;
+
 			const result: Disposable = {
 				dispose() {
 					if (!disposed) {
 						disposed = true;
+
 						self._listeners.delete(listener);
 					}
 				},
 			};
+
 			if (disposables) disposables.push(result);
+
 			return result;
 		};
 	}
@@ -64,8 +71,10 @@ export class EventEmitter<T> {
 
 		for (let index = 0; index < this._deliveryQueue.length; index++) {
 			const { listener, event } = this._deliveryQueue[index];
+
 			listener.call(null, event);
 		}
+
 		this._deliveryQueue = undefined;
 	}
 

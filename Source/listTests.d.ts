@@ -20,17 +20,22 @@ import type { TestError } from "./upstream/reporter";
 
 export type ProjectConfigWithFiles = {
 	name: string;
+
 	testDir: string;
+
 	use: { testIdAttribute?: string };
+
 	files: string[];
 };
 
 export type ConfigListFilesReport = {
 	projects: ProjectConfigWithFiles[];
+
 	error?: TestError;
 };
 
 export type ConfigFindRelatedTestFilesReport = {
 	testFiles: string[];
+
 	errors?: TestError[];
 };

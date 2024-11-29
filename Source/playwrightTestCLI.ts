@@ -34,7 +34,9 @@ import * as vscodeTypes from "./vscodeTypes";
 
 export class PlaywrightTestCLI {
 	private _vscode: vscodeTypes.VSCode;
+
 	private _options: PlaywrightTestOptions;
+
 	private _model: TestModel;
 
 	constructor(
@@ -43,7 +45,9 @@ export class PlaywrightTestCLI {
 		options: PlaywrightTestOptions,
 	) {
 		this._vscode = vscode;
+
 		this._model = model;
+
 		this._options = options;
 	}
 
@@ -66,6 +70,7 @@ export class PlaywrightTestCLI {
 				`${escapeRegex(path.relative(this._model.config.workspaceFolder, configFolder))}> playwright list-files -c ${configFile}`,
 			);
 		}
+
 		const output = await this._runNode(allArgs, configFolder);
 
 		const result = JSON.parse(output) as Partial<ConfigListFilesReport>;
@@ -83,7 +88,9 @@ export class PlaywrightTestCLI {
 		token: vscodeTypes.CancellationToken,
 	): Promise<void> {
 		const args = [];
+
 		args.push("--list", "--reporter=null");
+
 		await this._innerSpawn(locations, args, {}, reporter, token);
 	}
 
@@ -112,13 +119,16 @@ export class PlaywrightTestCLI {
 		if (!locations) return;
 
 		const args = [];
+
 		this._model
 			.enabledProjectsFilter()
 			.forEach((p) => args.push(`--project=${p}`));
 
 		if (parametrizedTestTitle)
 			args.push(`--grep=${escapeRegex(parametrizedTestTitle)}`);
+
 		args.push("--repeat-each=1");
+
 		args.push("--retries=0");
 
 		if (options.headed) args.push("--headed");
@@ -126,6 +136,7 @@ export class PlaywrightTestCLI {
 		if (options.workers) args.push(`--workers=${options.workers}`);
 
 		if (options.trace) args.push(`--trace=${options.trace}`);
+
 		await this._innerSpawn(locations, args, options, reporter, token);
 	}
 
@@ -159,6 +170,7 @@ export class PlaywrightTestCLI {
 				.map((f) => path.relative(configFolder, f))
 				.map(escapeRegex)
 				.sort();
+
 			const printArgs = extraArgs.filter(
 				(a) =>
 					!a.includes("--repeat-each") &&
@@ -166,6 +178,7 @@ export class PlaywrightTestCLI {
 					!a.includes("--workers") &&
 					!a.includes("--trace"),
 			);
+
 			this._log(
 				`${escapeRegex(path.relative(this._model.config.workspaceFolder, configFolder))}> playwright test -c ${configFile}${printArgs.length ? " " + printArgs.join(" ") : ""}${relativeLocations.length ? " " + relativeLocations.join(" ") : ""}`,
 			);
@@ -205,8 +218,11 @@ export class PlaywrightTestCLI {
 		);
 
 		const stdio = childProcess.stdio;
+
 		stdio[1].on("data", (data) => reporter.onStdOut?.(data));
+
 		stdio[2].on("data", (data) => reporter.onStdErr?.(data));
+
 		await reporterServer.wireTestListener(reporter, token);
 	}
 
@@ -256,6 +272,7 @@ export class PlaywrightTestCLI {
 			const relativeLocations = locations
 				.map((f) => path.relative(configFolder, f))
 				.map(escapeRegex);
+
 			this._log(
 				`${escapeRegex(path.relative(this._model.config.workspaceFolder, configFolder))}> debug -c ${configFile}${relativeLocations.length ? " " + relativeLocations.join(" ") : ""}`,
 			);
@@ -270,12 +287,15 @@ export class PlaywrightTestCLI {
 
 		try {
 			const debugEnd = new this._vscode.CancellationTokenSource();
+
 			token.onCancellationRequested(() => debugEnd.cancel());
 
 			let mainDebugRun: vscodeTypes.DebugSession | undefined;
+
 			this._vscode.debug.onDidStartDebugSession((session) => {
 				if (session.name === debugSessionName) mainDebugRun ??= session;
 			});
+
 			this._vscode.debug.onDidTerminateDebugSession((session) => {
 				// child processes have their own debug sessions,
 				// but we only want to stop debugging if the user cancels the main session
@@ -313,6 +333,7 @@ export class PlaywrightTestCLI {
 				program: this._model.config.cli,
 				args,
 			});
+
 			await reporterServer.wireTestListener(reporter, token);
 		} finally {
 			await this._options.runHooks.onDidRunTests(true);
@@ -341,11 +362,14 @@ export class PlaywrightTestCLI {
 				`${escapeRegex(path.relative(this._model.config.workspaceFolder, configFolder))}> playwright find-related-test-files -c ${configFile}`,
 			);
 		}
+
 		try {
 			const output = await this._runNode(allArgs, configFolder);
+
 			const result = JSON.parse(
 				output,
 			) as ConfigFindRelatedTestFilesReport;
+
 			return result;
 		} catch (error: any) {
 			return {
@@ -375,6 +399,7 @@ export class PlaywrightTestCLI {
 
 	private _narrowDownLocations(items: vscodeTypes.TestItem[]): {
 		locations: string[] | null;
+
 		parametrizedTestTitle: string | undefined;
 	} {
 		if (!items.length)
@@ -385,8 +410,10 @@ export class PlaywrightTestCLI {
 		// If it is parametrized, use label when running test.
 		if (items.length === 1) {
 			const test = items[0];
+
 			if (test.uri && test.range) {
 				let testsAtLocation = 0;
+
 				test.parent?.children.forEach((t) => {
 					if (
 						t.uri?.fsPath === test.uri?.fsPath &&
@@ -403,16 +430,20 @@ export class PlaywrightTestCLI {
 
 		for (const item of items) {
 			const itemFsPath = item.uri!.fsPath;
+
 			const enabledFiles = this._model.enabledFiles();
+
 			for (const file of enabledFiles) {
 				if (file === itemFsPath || file.startsWith(itemFsPath)) {
 					const line = item.range
 						? ":" + (item.range.start.line + 1)
 						: "";
+
 					locations.add(item.uri!.fsPath + line);
 				}
 			}
 		}
+
 		return {
 			locations: locations.size ? [...locations] : null,
 			parametrizedTestTitle,

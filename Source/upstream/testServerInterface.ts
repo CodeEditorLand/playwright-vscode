@@ -25,8 +25,11 @@ export type ReportEntry = JsonEvent;
 export interface TestServerInterface {
 	initialize(params: {
 		serializer?: string;
+
 		closeOnDisconnect?: boolean;
+
 		interceptStdio?: boolean;
+
 		watchTestDirs?: boolean;
 	}): Promise<void>;
 
@@ -44,21 +47,25 @@ export interface TestServerInterface {
 
 	runGlobalSetup(params: {}): Promise<{
 		report: ReportEntry[];
+
 		status: reporterTypes.FullResult["status"];
 	}>;
 
 	runGlobalTeardown(params: {}): Promise<{
 		report: ReportEntry[];
+
 		status: reporterTypes.FullResult["status"];
 	}>;
 
 	startDevServer(params: {}): Promise<{
 		report: ReportEntry[];
+
 		status: reporterTypes.FullResult["status"];
 	}>;
 
 	stopDevServer(params: {}): Promise<{
 		report: ReportEntry[];
+
 		status: reporterTypes.FullResult["status"];
 	}>;
 
@@ -66,6 +73,7 @@ export interface TestServerInterface {
 
 	listFiles(params: { projects?: string[] }): Promise<{
 		report: ReportEntry[];
+
 		status: reporterTypes.FullResult["status"];
 	}>;
 
@@ -74,24 +82,39 @@ export interface TestServerInterface {
 	 */
 	listTests(params: { projects?: string[]; locations?: string[] }): Promise<{
 		report: ReportEntry[];
+
 		status: reporterTypes.FullResult["status"];
 	}>;
 
 	runTests(params: {
 		locations?: string[];
+
 		grep?: string;
+
 		grepInvert?: string;
+
 		testIds?: string[];
+
 		headed?: boolean;
+
 		workers?: number | string;
+
 		timeout?: number;
+
 		outputDir?: string;
+
 		updateSnapshots?: "all" | "none" | "missing";
+
 		reporters?: string[];
+
 		trace?: "on" | "off";
+
 		video?: "on" | "off";
+
 		projects?: string[];
+
 		reuseContext?: boolean;
+
 		connectWsEndpoint?: string;
 	}): Promise<{
 		status: reporterTypes.FullResult["status"];
@@ -108,27 +131,37 @@ export interface TestServerInterface {
 
 export interface TestServerInterfaceEvents {
 	onReport: Event<any>;
+
 	onStdio: Event<{
 		type: "stdout" | "stderr";
+
 		text?: string;
+
 		buffer?: string;
 	}>;
+
 	onListChanged: Event<void>;
+
 	onTestFilesChanged: Event<{ testFiles: string[] }>;
+
 	onLoadTraceRequested: Event<{ traceUrl: string }>;
 }
 
 export interface TestServerInterfaceEventEmitters {
 	dispatchEvent(event: "report", params: ReportEntry): void;
+
 	dispatchEvent(
 		event: "stdio",
 		params: { type: "stdout" | "stderr"; text?: string; buffer?: string },
 	): void;
+
 	dispatchEvent(event: "listChanged", params: {}): void;
+
 	dispatchEvent(
 		event: "testFilesChanged",
 		params: { testFiles: string[] },
 	): void;
+
 	dispatchEvent(
 		event: "loadTraceRequested",
 		params: { traceUrl: string },

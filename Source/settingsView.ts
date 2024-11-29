@@ -25,14 +25,19 @@ import * as vscodeTypes from "./vscodeTypes";
 
 type ConfigEntry = {
 	label: string;
+
 	configFile: string;
+
 	selected: boolean;
+
 	enabled: boolean;
+
 	projects: ProjectEntry[];
 };
 
 type ProjectEntry = {
 	name: string;
+
 	enabled: boolean;
 };
 
@@ -41,10 +46,15 @@ export class SettingsView
 	implements vscodeTypes.WebviewViewProvider
 {
 	private _view: vscodeTypes.WebviewView | undefined;
+
 	private _vscode: vscodeTypes.VSCode;
+
 	private _extensionUri: vscodeTypes.Uri;
+
 	private _settingsModel: SettingsModel;
+
 	private _reusedBrowser: ReusedBrowser;
+
 	private _models: TestModelCollection;
 
 	constructor(
@@ -55,11 +65,17 @@ export class SettingsView
 		extensionUri: vscodeTypes.Uri,
 	) {
 		super();
+
 		this._vscode = vscode;
+
 		this._settingsModel = settingsModel;
+
 		this._models = models;
+
 		this._reusedBrowser = reusedBrowser;
+
 		this._extensionUri = extensionUri;
+
 		this._disposables = [
 			reusedBrowser.onRunningTestsChanged(() => this._updateActions()),
 			reusedBrowser.onPageCountChanged(() => this._updateActions()),
@@ -68,8 +84,10 @@ export class SettingsView
 				this,
 			),
 		];
+
 		this._models.onUpdated(() => {
 			this._updateModels();
+
 			this._updateActions();
 		});
 	}
@@ -91,6 +109,7 @@ export class SettingsView
 			this._extensionUri,
 			webviewView.webview,
 		);
+
 		this._disposables.push(
 			webviewView.webview.onDidReceiveMessage((data) => {
 				if (data.method === "execute") {
@@ -101,6 +120,7 @@ export class SettingsView
 					);
 				} else if (data.method === "setProjectEnabled") {
 					const { configFile, projectName, enabled } = data.params;
+
 					this._models.setProjectEnabled(
 						configFile,
 						projectName,
@@ -115,6 +135,7 @@ export class SettingsView
 		this._disposables.push(
 			this._settingsModel.onChange(() => {
 				this._updateSettings();
+
 				this._updateActions();
 			}),
 		);
@@ -122,13 +143,19 @@ export class SettingsView
 		this._disposables.push(
 			webviewView.onDidChangeVisibility(() => {
 				if (!webviewView.visible) return;
+
 				this._updateSettings();
+
 				this._updateModels();
+
 				this._updateActions();
 			}),
 		);
+
 		this._updateSettings();
+
 		this._updateModels();
+
 		this._updateActions();
 	}
 
@@ -243,6 +270,7 @@ export class SettingsView
 		const configs: ConfigEntry[] = [];
 
 		const workspaceFolders = new Set<string>();
+
 		this._models
 			.enabledModels()
 			.forEach((model) =>
@@ -254,6 +282,7 @@ export class SettingsView
 				workspaceFolders.size > 1
 					? path.basename(model.config.workspaceFolder) + path.sep
 					: "";
+
 			configs.push({
 				label:
 					prefix +
@@ -285,6 +314,7 @@ export class SettingsView
 		const itemMap = new Map<string, vscodeTypes.QuickPickItem>();
 
 		const workspaceFolders = new Set<string>();
+
 		this._models
 			.models()
 			.forEach((model) =>
@@ -296,6 +326,7 @@ export class SettingsView
 				workspaceFolders.size > 1
 					? path.basename(model.config.workspaceFolder) + path.sep
 					: "";
+
 			const modelItem: vscodeTypes.QuickPickItem = {
 				label:
 					prefix +
@@ -305,10 +336,14 @@ export class SettingsView
 					),
 				picked: model.isEnabled,
 			};
+
 			itemMap.set(model.config.configFile, modelItem);
+
 			options.push(modelItem);
 		}
+
 		options.sort((a, b) => a.label.localeCompare(b.label));
+
 		this._vscode.window
 			.showQuickPick(options, {
 				title: this._vscode.l10n.t("Toggle Playwright Configs"),
@@ -316,17 +351,21 @@ export class SettingsView
 			})
 			.then((result) => {
 				if (!result) return;
+
 				for (const model of this._models.models()) {
 					const modelItem = itemMap.get(model.config.configFile);
 
 					if (!modelItem) continue;
+
 					this._models.setModelEnabled(
 						model.config.configFile,
 						!!result?.includes(modelItem),
 						true,
 					);
 				}
+
 				this._models.ensureHasEnabledModels();
+
 				this._updateModels();
 			});
 	}
@@ -340,6 +379,7 @@ function htmlForWebview(
 	const styleUri = webview.asWebviewUri(
 		vscode.Uri.joinPath(extensionUri, "media", "settingsView.css"),
 	);
+
 	const nonce = getNonce();
 
 	return `<!DOCTYPE html>
@@ -394,6 +434,7 @@ function htmlForWebview(
       let selectConfig;
       function updateProjects(projects) {
         const projectsElement = document.getElementById('projects');
+
         projectsElement.textContent = '';
 
         for (const project of projects) {
@@ -458,15 +499,20 @@ function htmlForWebview(
                 vscode.postMessage({ method: 'execute', params: { command: event.target.getAttribute('command') } });
               });
             }
+
             label.setAttribute('role', 'button');
+
             label.setAttribute('command', action.command);
 
             const svg = document.createElement('svg');
+
             actionElement.appendChild(label);
+
             label.appendChild(svg);
 
             if (action.text)
               label.appendChild(document.createTextNode(action.text));
+
             label.title = action.title || action.text;
 
             if (action.location === 'configToolbar')
@@ -477,6 +523,7 @@ function htmlForWebview(
 
             else
               actionsElement.appendChild(actionElement);
+
             svg.outerHTML = action.svg;
           }
         } else if (method === 'models') {
@@ -488,8 +535,11 @@ function htmlForWebview(
             configsMap.set(config.configFile, config);
 
             const option = document.createElement('option');
+
             option.value = config.configFile;
+
             option.textContent = config.label;
+
             select.appendChild(option);
 
             if (config.selected) {
@@ -500,6 +550,7 @@ function htmlForWebview(
           }
           select.addEventListener('change', event => {
             vscode.postMessage({ method: 'selectModel', params: { configFile: select.value } });
+
             updateProjects(configsMap.get(select.value).projects);
           });
           const modelSelector = document.getElementById('model-selector');

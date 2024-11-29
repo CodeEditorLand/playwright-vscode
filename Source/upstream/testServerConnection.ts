@@ -28,59 +28,87 @@ export class TestServerConnection
 	implements TestServerInterface, TestServerInterfaceEvents
 {
 	readonly onClose: events.Event<void>;
+
 	readonly onReport: events.Event<any>;
+
 	readonly onStdio: events.Event<{
 		type: "stderr" | "stdout";
+
 		text?: string | undefined;
+
 		buffer?: string | undefined;
 	}>;
+
 	readonly onListChanged: events.Event<void>;
+
 	readonly onTestFilesChanged: events.Event<{ testFiles: string[] }>;
+
 	readonly onLoadTraceRequested: events.Event<{ traceUrl: string }>;
 
 	private _onCloseEmitter = new events.EventEmitter<void>();
+
 	private _onReportEmitter = new events.EventEmitter<any>();
+
 	private _onStdioEmitter = new events.EventEmitter<{
 		type: "stderr" | "stdout";
+
 		text?: string | undefined;
+
 		buffer?: string | undefined;
 	}>();
+
 	private _onListChangedEmitter = new events.EventEmitter<void>();
+
 	private _onTestFilesChangedEmitter = new events.EventEmitter<{
 		testFiles: string[];
 	}>();
+
 	private _onLoadTraceRequestedEmitter = new events.EventEmitter<{
 		traceUrl: string;
 	}>();
 
 	private _lastId = 0;
+
 	private _ws: WebSocket;
+
 	private _callbacks = new Map<
 		number,
 		{ resolve: (arg: any) => void; reject: (arg: Error) => void }
 	>();
+
 	private _connectedPromise: Promise<void>;
+
 	private _isClosed = false;
 
 	constructor(wsURL: string) {
 		this.onClose = this._onCloseEmitter.event;
+
 		this.onReport = this._onReportEmitter.event;
+
 		this.onStdio = this._onStdioEmitter.event;
+
 		this.onListChanged = this._onListChangedEmitter.event;
+
 		this.onTestFilesChanged = this._onTestFilesChangedEmitter.event;
+
 		this.onLoadTraceRequested = this._onLoadTraceRequestedEmitter.event;
 
 		this._ws = new WebSocket(wsURL);
+
 		this._ws.addEventListener("message", (event) => {
 			const message = JSON.parse(String(event.data));
+
 			const { id, result, error, method, params } = message;
+
 			if (id) {
 				const callback = this._callbacks.get(id);
 
 				if (!callback) return;
+
 				this._callbacks.delete(id);
 
 				if (error) callback.reject(new Error(error));
+
 				else callback.resolve(result);
 			} else {
 				this._dispatchEvent(method, params);
@@ -91,13 +119,18 @@ export class TestServerConnection
 			() => this._sendMessage("ping").catch(() => {}),
 			30000,
 		);
+
 		this._connectedPromise = new Promise<void>((f, r) => {
 			this._ws.addEventListener("open", () => f());
+
 			this._ws.addEventListener("error", r);
 		});
+
 		this._ws.addEventListener("close", () => {
 			this._isClosed = true;
+
 			this._onCloseEmitter.fire();
+
 			clearInterval(pingInterval);
 		});
 	}
@@ -108,6 +141,7 @@ export class TestServerConnection
 
 	private async _sendMessage(method: string, params?: any): Promise<any> {
 		const logForTest = (globalThis as any).__logForTest;
+
 		logForTest?.({ method, params });
 
 		await this._connectedPromise;
@@ -115,6 +149,7 @@ export class TestServerConnection
 		const id = ++this._lastId;
 
 		const message = { id, method, params };
+
 		this._ws.send(JSON.stringify(message));
 
 		return new Promise((resolve, reject) => {
@@ -128,11 +163,15 @@ export class TestServerConnection
 
 	private _dispatchEvent(method: string, params?: any) {
 		if (method === "report") this._onReportEmitter.fire(params);
+
 		else if (method === "stdio") this._onStdioEmitter.fire(params);
+
 		else if (method === "listChanged")
 			this._onListChangedEmitter.fire(params);
+
 		else if (method === "testFilesChanged")
 			this._onTestFilesChangedEmitter.fire(params);
+
 		else if (method === "loadTraceRequested")
 			this._onLoadTraceRequestedEmitter.fire(params);
 	}

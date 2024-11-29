@@ -29,69 +29,115 @@ export type TestStatus =
 
 export type FullConfig = {
 	configFile: string;
+
 	version: string;
+
 	rootDir: string;
+
 	forbidOnly: unknown;
+
 	fullyParallel: unknown;
+
 	globalSetup?: unknown;
+
 	globalTeardown?: unknown;
+
 	globalTimeout?: unknown;
+
 	grep: string | RegExp | (string | RegExp)[];
+
 	grepInvert: string | RegExp | (string | RegExp)[] | null;
+
 	maxFailures?: unknown;
+
 	metadata: Metadata;
+
 	preserveOutput?: unknown;
+
 	projects: FullProject[];
+
 	quiet?: unknown;
+
 	reporter: unknown[];
+
 	reportSlowTests?: unknown;
+
 	shard?: unknown;
+
 	updateSnapshots?: unknown;
+
 	webServer?: unknown;
+
 	workers?: number;
 };
 
 export type FullProject = {
 	name: string;
+
 	testDir: string;
+
 	metadata: Metadata;
+
 	outputDir: string;
+
 	teardown?: string;
+
 	dependencies: string[];
+
 	testIgnore: string | RegExp | (string | RegExp)[];
+
 	testMatch: string | RegExp | (string | RegExp)[];
+
 	timeout: number;
+
 	grep: string | RegExp | (string | RegExp)[];
+
 	grepInvert: string | RegExp | (string | RegExp)[] | null;
+
 	snapshotDir: string;
+
 	retries: number;
+
 	repeatEach: number;
+
 	use: unknown;
 };
 
 interface FullReporterV2 {
 	onConfigure(config: FullConfig): void;
+
 	onBegin(suite: Suite): void;
+
 	onTestBegin(test: TestCase, result: TestResult): void;
+
 	onStdOut(
 		chunk: string | Buffer,
 		test?: TestCase,
 		result?: TestResult,
 	): void;
+
 	onStdErr(
 		chunk: string | Buffer,
 		test?: TestCase,
 		result?: TestResult,
 	): void;
+
 	onTestEnd(test: TestCase, result: TestResult): void;
+
 	onEnd(
 		result: FullResult,
 	): Promise<{ status?: FullResult["status"] } | undefined | void> | void;
+
 	onExit(): void | Promise<void>;
+
 	onError(error: TestError): void;
+
 	onStepBegin(test: TestCase, result: TestResult, step: TestStep): void;
+
 	onStepEnd(test: TestCase, result: TestResult, step: TestStep): void;
+
 	printsToStdio(): boolean;
+
 	version(): "v2";
 }
 
@@ -605,88 +651,139 @@ export interface JSONReport {
 	config: Omit<FullConfig, "projects"> & {
 		projects: {
 			outputDir: string;
+
 			repeatEach: number;
+
 			retries: number;
+
 			metadata: Metadata;
+
 			id: string;
+
 			name: string;
+
 			testDir: string;
+
 			testIgnore: string[];
+
 			testMatch: string[];
+
 			timeout: number;
 		}[];
 	};
+
 	suites: JSONReportSuite[];
+
 	errors: TestError[];
+
 	stats: {
 		startTime: string; // Date in ISO 8601 format.
 		duration: number; // In milliseconds;
+
 		expected: number;
+
 		unexpected: number;
+
 		flaky: number;
+
 		skipped: number;
 	};
 }
 
 export interface JSONReportSuite {
 	title: string;
+
 	file: string;
+
 	column: number;
+
 	line: number;
+
 	specs: JSONReportSpec[];
+
 	suites?: JSONReportSuite[];
 }
 
 export interface JSONReportSpec {
 	tags: string[];
+
 	title: string;
+
 	ok: boolean;
+
 	tests: JSONReportTest[];
+
 	id: string;
+
 	file: string;
+
 	line: number;
+
 	column: number;
 }
 
 export interface JSONReportTest {
 	timeout: number;
+
 	annotations: { type: string; description?: string }[];
+
 	expectedStatus: TestStatus;
+
 	projectName: string;
+
 	projectId: string;
+
 	results: JSONReportTestResult[];
+
 	status: "skipped" | "expected" | "unexpected" | "flaky";
 }
 
 export interface JSONReportError {
 	message: string;
+
 	location?: Location;
 }
 
 export interface JSONReportTestResult {
 	workerIndex: number;
+
 	status: TestStatus | undefined;
+
 	duration: number;
+
 	error: TestError | undefined;
+
 	errors: JSONReportError[];
+
 	stdout: JSONReportSTDIOEntry[];
+
 	stderr: JSONReportSTDIOEntry[];
+
 	retry: number;
+
 	steps?: JSONReportTestStep[];
+
 	startTime: string; // Date in ISO 8601 format.
 	attachments: {
 		name: string;
+
 		path?: string;
+
 		body?: string;
+
 		contentType: string;
 	}[];
+
 	errorLocation?: Location;
 }
 
 export interface JSONReportTestStep {
 	title: string;
+
 	duration: number;
+
 	error: TestError | undefined;
+
 	steps?: JSONReportTestStep[];
 }
 

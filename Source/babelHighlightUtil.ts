@@ -31,6 +31,7 @@ const astCache = new Map<string, { text: string; ast?: ParseResult }>();
 
 export function pruneAstCaches(fsPathsToRetain: string[]) {
 	const retain = new Set(fsPathsToRetain);
+
 	for (const key of astCache.keys()) {
 		if (!retain.has(key)) astCache.delete(key);
 	}
@@ -48,7 +49,9 @@ export function locatorForSourcePosition(
 	position: SourcePosition,
 ): string | undefined {
 	const cached = astCache.get(fsPath);
+
 	let ast = cached?.ast;
+
 	if (!cached || cached.text !== text) {
 		try {
 			ast = parse(text, {
@@ -63,6 +66,7 @@ export function locatorForSourcePosition(
 				configFile: false,
 				sourceType: "module",
 			});
+
 			astCache.set(fsPath, { text, ast });
 		} catch (e) {
 			astCache.set(fsPath, { text, ast: undefined });
@@ -72,11 +76,15 @@ export function locatorForSourcePosition(
 	if (!ast) return;
 
 	let rangeMatch: string | undefined;
+
 	let lineMatch: string | undefined;
+
 	traverse(ast, {
 		enter(path) {
 			let expressionNode;
+
 			let pageSelectorNode;
+
 			let pageSelectorCallee;
 
 			// Hover over page.[click,check,...](selector) will highlight `page.locator(selector)`.
@@ -89,7 +97,9 @@ export function locatorForSourcePosition(
 				pageMethods.includes(path.node.callee.property.name)
 			) {
 				expressionNode = path.node;
+
 				pageSelectorNode = path.node.arguments[0];
+
 				pageSelectorCallee = path.node.callee.object.name;
 			}
 
@@ -121,13 +131,17 @@ export function locatorForSourcePosition(
 				expressionNode = path.node;
 
 			if (!expressionNode || !expressionNode.loc) return;
+
 			const isRangeMatch = containsPosition(expressionNode.loc, position);
+
 			const isLineMatch = expressionNode.loc.start.line === position.line;
+
 			if (isRangeMatch || isLineMatch) {
 				let expression;
 
 				if (pageSelectorNode)
 					expression = `${pageSelectorCallee}.locator(${text.substring(pageSelectorNode.start!, pageSelectorNode.end!)})`;
+
 				else
 					expression = text.substring(
 						expressionNode.start!,
@@ -141,6 +155,7 @@ export function locatorForSourcePosition(
 					// Prefer shortest range match to better support chains.
 					rangeMatch = expression;
 				}
+
 				if (
 					isLineMatch &&
 					(!lineMatch || lineMatch.length < expression.length)
@@ -151,6 +166,7 @@ export function locatorForSourcePosition(
 			}
 		},
 	});
+
 	return rangeMatch || lineMatch;
 }
 
@@ -163,15 +179,18 @@ function containsPosition(
 		position.line > location.end.line
 	)
 		return false;
+
 	if (
 		position.line === location.start.line &&
 		position.column < location.start.column
 	)
 		return false;
+
 	if (
 		position.line === location.end.line &&
 		position.column > location.end.column
 	)
 		return false;
+
 	return true;
 }

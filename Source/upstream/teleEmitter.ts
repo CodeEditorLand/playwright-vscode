@@ -28,12 +28,15 @@ import { serializeRegexPatterns } from "./teleReceiver";
 
 export type TeleReporterEmitterOptions = {
 	omitOutput?: boolean;
+
 	omitBuffers?: boolean;
 };
 
 export class TeleReporterEmitter implements ReporterV2 {
 	private _messageSink: (message: teleReceiver.JsonEvent) => void;
+
 	private _rootDir!: string;
+
 	private _emitterOptions: TeleReporterEmitterOptions;
 
 	constructor(
@@ -41,6 +44,7 @@ export class TeleReporterEmitter implements ReporterV2 {
 		options: TeleReporterEmitterOptions = {},
 	) {
 		this._messageSink = messageSink;
+
 		this._emitterOptions = options;
 	}
 
@@ -50,6 +54,7 @@ export class TeleReporterEmitter implements ReporterV2 {
 
 	onConfigure(config: reporterTypes.FullConfig) {
 		this._rootDir = config.rootDir;
+
 		this._messageSink({
 			method: "onConfigure",
 			params: { config: this._serializeConfig(config) },
@@ -63,6 +68,7 @@ export class TeleReporterEmitter implements ReporterV2 {
 
 		for (const project of projects)
 			this._messageSink({ method: "onProject", params: { project } });
+
 		this._messageSink({ method: "onBegin", params: undefined });
 	}
 
@@ -71,6 +77,7 @@ export class TeleReporterEmitter implements ReporterV2 {
 		result: reporterTypes.TestResult,
 	): void {
 		(result as any)[idSymbol] = createGuid();
+
 		this._messageSink({
 			method: "onTestBegin",
 			params: {
@@ -90,6 +97,7 @@ export class TeleReporterEmitter implements ReporterV2 {
 			annotations: test.annotations,
 			timeout: test.timeout,
 		};
+
 		this._messageSink({
 			method: "onTestEnd",
 			params: {
@@ -105,6 +113,7 @@ export class TeleReporterEmitter implements ReporterV2 {
 		step: reporterTypes.TestStep,
 	): void {
 		(step as any)[idSymbol] = createGuid();
+
 		this._messageSink({
 			method: "onStepBegin",
 			params: {
@@ -164,6 +173,7 @@ export class TeleReporterEmitter implements ReporterV2 {
 		const isBase64 = typeof chunk !== "string";
 
 		const data = isBase64 ? chunk.toString("base64") : chunk;
+
 		this._messageSink({
 			method: "onStdIO",
 			params: {
@@ -182,6 +192,7 @@ export class TeleReporterEmitter implements ReporterV2 {
 			startTime: result.startTime.getTime(),
 			duration: result.duration,
 		};
+
 		this._messageSink({
 			method: "onEnd",
 			params: {
@@ -329,9 +340,11 @@ export class TeleReporterEmitter implements ReporterV2 {
 	private _relativeLocation(
 		location: reporterTypes.Location,
 	): reporterTypes.Location;
+
 	private _relativeLocation(
 		location?: reporterTypes.Location,
 	): reporterTypes.Location | undefined;
+
 	private _relativeLocation(
 		location: reporterTypes.Location | undefined,
 	): reporterTypes.Location | undefined {
@@ -344,7 +357,9 @@ export class TeleReporterEmitter implements ReporterV2 {
 	}
 
 	private _relativePath(absolutePath: string): string;
+
 	private _relativePath(absolutePath?: string): string | undefined;
+
 	private _relativePath(absolutePath?: string): string | undefined {
 		if (!absolutePath) return absolutePath;
 

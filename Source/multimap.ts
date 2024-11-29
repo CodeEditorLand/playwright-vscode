@@ -26,8 +26,10 @@ export class MultiMap<K, V> {
 
 		if (!values) {
 			values = [];
+
 			this._map.set(key, values);
 		}
+
 		values.push(value);
 	}
 

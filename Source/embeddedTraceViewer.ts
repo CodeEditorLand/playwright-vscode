@@ -23,12 +23,17 @@ import * as vscodeTypes from "./vscodeTypes";
 
 export class EmbeddedTraceViewer implements TraceViewer {
 	readonly vscode: vscodeTypes.VSCode;
+
 	readonly extensionUri: vscodeTypes.Uri;
+
 	private _currentFile?: string;
+
 	private _traceViewerPanelPromise?: Promise<
 		EmbeddedTraceViewerPanel | undefined
 	>;
+
 	private _config: TestConfig;
+
 	private _testServer: PlaywrightTestServer;
 
 	constructor(
@@ -38,8 +43,11 @@ export class EmbeddedTraceViewer implements TraceViewer {
 		testServer: PlaywrightTestServer,
 	) {
 		this.vscode = vscode;
+
 		this.extensionUri = extensionUri;
+
 		this._config = config;
+
 		this._testServer = testServer;
 	}
 
@@ -57,6 +65,7 @@ export class EmbeddedTraceViewer implements TraceViewer {
 		if (!file && !this._traceViewerPanelPromise) return;
 
 		const traceViewerPanel = await this._startIfNeeded();
+
 		traceViewerPanel?.loadTraceRequested(file);
 	}
 
@@ -64,7 +73,9 @@ export class EmbeddedTraceViewer implements TraceViewer {
 		this._traceViewerPanelPromise
 			?.then((panel) => panel?.dispose())
 			.catch(() => {});
+
 		this._traceViewerPanelPromise = undefined;
+
 		this._currentFile = undefined;
 	}
 
@@ -101,12 +112,19 @@ class EmbeddedTraceViewerPanel extends DisposableBase {
 	public static readonly viewType = "playwright.traceviewer.view";
 
 	private _vscode: vscodeTypes.VSCode;
+
 	private _extensionUri: vscodeTypes.Uri;
+
 	private _webviewPanel: vscodeTypes.WebviewPanel;
+
 	readonly serverUrlPrefix: string;
+
 	private _isVisible: boolean = false;
+
 	private _viewColumn: vscodeTypes.ViewColumn | undefined;
+
 	private _traceUrl?: string;
+
 	private _traceLoadRequestedTimeout?: NodeJS.Timeout;
 
 	constructor(
@@ -114,10 +132,15 @@ class EmbeddedTraceViewerPanel extends DisposableBase {
 		serverUrlPrefix: string,
 	) {
 		super();
+
 		this._vscode = embeddedTestViewer.vscode;
+
 		this._extensionUri = embeddedTestViewer.extensionUri;
+
 		this.serverUrlPrefix = serverUrlPrefix;
+
 		this._isVisible = false;
+
 		this._webviewPanel = this._vscode.window.createWebviewPanel(
 			EmbeddedTraceViewerPanel.viewType,
 			"Trace Viewer",
@@ -130,13 +153,17 @@ class EmbeddedTraceViewerPanel extends DisposableBase {
 				enableForms: true,
 			},
 		);
+
 		this._viewColumn = this._webviewPanel.viewColumn;
+
 		this._webviewPanel.iconPath = this._vscode.Uri.joinPath(
 			this._extensionUri,
 			"images",
 			"playwright-logo.svg",
 		);
+
 		this._webviewPanel.webview.html = this._getHtml();
+
 		this._disposables = [
 			this._webviewPanel,
 			this._webviewPanel.onDidDispose(() => {
@@ -148,11 +175,14 @@ class EmbeddedTraceViewerPanel extends DisposableBase {
 					this._viewColumn === webviewPanel.viewColumn
 				)
 					return;
+
 				this._isVisible = webviewPanel.visible;
+
 				this._viewColumn = webviewPanel.viewColumn;
 
 				if (this._isVisible) {
 					this._applyTheme();
+
 					this.loadTraceRequested(this._traceUrl);
 				} else {
 					this._clearTraceLoadRequestedTimeout();
@@ -162,6 +192,7 @@ class EmbeddedTraceViewerPanel extends DisposableBase {
 				const methodRequest = this._extractMethodRequest(message);
 
 				if (!methodRequest) return;
+
 				this._executeMethod(methodRequest).catch(() => {});
 			}),
 			this._vscode.workspace.onDidChangeConfiguration((event) => {
@@ -173,6 +204,7 @@ class EmbeddedTraceViewerPanel extends DisposableBase {
 
 	loadTraceRequested(traceUrl?: string) {
 		this._traceUrl = traceUrl;
+
 		this._fireLoadTraceRequestedIfNeeded();
 	}
 
@@ -189,6 +221,7 @@ class EmbeddedTraceViewerPanel extends DisposableBase {
 	private _clearTraceLoadRequestedTimeout() {
 		if (this._traceLoadRequestedTimeout) {
 			clearTimeout(this._traceLoadRequestedTimeout);
+
 			this._traceLoadRequestedTimeout = undefined;
 		}
 	}
@@ -196,9 +229,12 @@ class EmbeddedTraceViewerPanel extends DisposableBase {
 	private _fireLoadTraceRequestedIfNeeded() {
 		if (this._traceLoadRequestedTimeout) {
 			clearTimeout(this._traceLoadRequestedTimeout);
+
 			this._traceLoadRequestedTimeout = undefined;
 		}
+
 		if (!this._isVisible) return;
+
 		this._webviewPanel.webview.postMessage({
 			method: "loadTraceRequested",
 			params: { traceUrl: this._traceUrl },
@@ -226,14 +262,17 @@ class EmbeddedTraceViewerPanel extends DisposableBase {
 		params,
 	}: {
 		method: string;
+
 		params?: any;
 	}) {
 		if (method === "openExternal" && params.url)
 			// should be a Uri, but due to https://github.com/microsoft/vscode/issues/85930
 			// we pass a string instead
 			await this._vscode.env.openExternal(params.url);
+
 		else if (method === "openSourceLocation" && params)
 			await this._openSourceFile(params);
+
 		else if (method === "showErrorMessage")
 			await this._vscode.window.showErrorMessage(params.message);
 	}
@@ -244,7 +283,9 @@ class EmbeddedTraceViewerPanel extends DisposableBase {
 		column,
 	}: {
 		file: string;
+
 		line: number;
+
 		column: number;
 	}) {
 		try {
@@ -252,7 +293,9 @@ class EmbeddedTraceViewerPanel extends DisposableBase {
 				await this._vscode.workspace.openTextDocument(file);
 			// received line and column are 1-based
 			const pos = new this._vscode.Position(line - 1, column - 1);
+
 			const selection = new this._vscode.Range(pos, pos);
+
 			await this._vscode.window.showTextDocument(document, { selection });
 		} catch (e) {
 			// ignore
@@ -270,6 +313,7 @@ class EmbeddedTraceViewerPanel extends DisposableBase {
 		].includes(themeKind)
 			? "dark-mode"
 			: "light-mode";
+
 		this._webviewPanel.webview.postMessage({
 			method: "applyTheme",
 			params: { theme },
@@ -328,13 +372,16 @@ class EmbeddedTraceViewerPanel extends DisposableBase {
 
                 for (const data of pendingMessages)
                   postMessageToFrame(data);
+
                 pendingMessages = [];
               } else if (data.type === 'keyup' || data.type === 'keydown') {
                 // propagate key events to vscode
                 const emulatedKeyboardEvent = new KeyboardEvent(data.type, data);
+
                 Object.defineProperty(emulatedKeyboardEvent, 'target', {
                   get: () => window,
                 });
+
                 window.dispatchEvent(emulatedKeyboardEvent);
               } else {
                 postMessageToVSCode(data);

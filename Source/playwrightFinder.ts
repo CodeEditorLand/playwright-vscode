@@ -29,6 +29,7 @@ const packages = [
 
 for (const packageName of packages) {
 	let packageJSONPath;
+
 	try {
 		packageJSONPath = require.resolve(
 			path.join(packageName, "package.json"),
@@ -37,6 +38,7 @@ for (const packageName of packages) {
 	} catch (e) {
 		continue;
 	}
+
 	try {
 		const packageJSON = require(packageJSONPath);
 
@@ -45,10 +47,13 @@ for (const packageName of packages) {
 		const v = parseFloat(version.replace(/-(next|beta)$/, ""));
 
 		const cli = path.join(packageJSONPath, "../cli.js");
+
 		console.log(JSON.stringify({ version: v, cli }, null, 2));
+
 		process.exit(0);
 	} catch (e) {
 		console.log(JSON.stringify({ error: String(e) }, null, 2));
+
 		process.exit(0);
 	}
 }

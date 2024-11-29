@@ -36,8 +36,11 @@ import * as vscodeTypes from "./vscodeTypes";
 
 export class PlaywrightTestServer {
 	private _vscode: vscodeTypes.VSCode;
+
 	private _options: PlaywrightTestOptions;
+
 	private _model: TestModel;
+
 	private _testServerPromise:
 		| Promise<TestServerConnection | null>
 		| undefined;
@@ -48,7 +51,9 @@ export class PlaywrightTestServer {
 		options: PlaywrightTestOptions,
 	) {
 		this._vscode = vscode;
+
 		this._model = model;
+
 		this._options = options;
 	}
 
@@ -76,13 +81,16 @@ export class PlaywrightTestServer {
 				onBegin(rootSuite) {
 					for (const projectSuite of rootSuite.suites) {
 						const project = projectSuite.project()!;
+
 						const files: string[] = [];
+
 						result.projects.push({
 							name: project.name,
 							testDir: project.testDir,
 							use: project.use || {},
 							files,
 						});
+
 						for (const fileSuite of projectSuite.suites)
 							files.push(fileSuite.location!.file);
 					}
@@ -163,6 +171,7 @@ export class PlaywrightTestServer {
 		const disposable = testServer.onStdio((params) => {
 			if (params.type === "stdout")
 				testListener.onStdOut?.(unwrapString(params));
+
 			if (params.type === "stderr")
 				testListener.onStdErr?.(unwrapString(params));
 		});
@@ -186,6 +195,7 @@ export class PlaywrightTestServer {
 
 				return status;
 			}
+
 			const { report, status } = await Promise.race([
 				testServer.runGlobalTeardown({}),
 				new Promise<{ status: "interrupted"; report: [] }>((f) =>
@@ -194,7 +204,9 @@ export class PlaywrightTestServer {
 					),
 				),
 			]);
+
 			for (const message of report) teleReceiver.dispatch(message);
+
 			return status;
 		} finally {
 			disposable.dispose();
@@ -223,6 +235,7 @@ export class PlaywrightTestServer {
 
 	async clearCache(): Promise<void> {
 		const testServer = await this._testServer();
+
 		await testServer?.clearCache({});
 	}
 
@@ -253,6 +266,7 @@ export class PlaywrightTestServer {
 			testIds,
 			...runOptions,
 		};
+
 		testServer.runTests(options);
 
 		token.onCancellationRequested(() => {
@@ -262,10 +276,13 @@ export class PlaywrightTestServer {
 		const disposable = testServer.onStdio((params) => {
 			if (params.type === "stdout")
 				reporter.onStdOut?.(unwrapString(params));
+
 			if (params.type === "stderr")
 				reporter.onStdErr?.(unwrapString(params));
 		});
+
 		await this._wireTestServer(testServer, reporter, token);
+
 		disposable.dispose();
 	}
 
@@ -289,6 +306,7 @@ export class PlaywrightTestServer {
 			 */
 			cwd = cwd[0].toUpperCase() + cwd.substring(1);
 		}
+
 		return {
 			cwd,
 			cli: path.relative(cwd, this._model.config.cli),
@@ -308,6 +326,7 @@ export class PlaywrightTestServer {
 
 				if (match) {
 					disposable.dispose();
+
 					f(match[1]);
 				}
 			});
@@ -323,12 +342,15 @@ export class PlaywrightTestServer {
 
 		try {
 			const debugEnd = new this._vscode.CancellationTokenSource();
+
 			token.onCancellationRequested(() => debugEnd.cancel());
 
 			let mainDebugRun: vscodeTypes.DebugSession | undefined;
+
 			this._vscode.debug.onDidStartDebugSession((session) => {
 				if (session.name === debugSessionName) mainDebugRun ??= session;
 			});
+
 			this._vscode.debug.onDidTerminateDebugSession((session) => {
 				// child processes have their own debug sessions,
 				// but we only want to stop debugging if the user cancels the main session
@@ -367,16 +389,21 @@ export class PlaywrightTestServer {
 			});
 
 			if (token?.isCancellationRequested) return;
+
 			const address = await addressPromise;
+
 			debugTestServer = new TestServerConnection(address);
+
 			await debugTestServer.initialize({
 				serializer: require.resolve("./oopReporter"),
 				closeOnDisconnect: true,
 			});
+
 			if (token?.isCancellationRequested) return;
 
 			const { locations, testIds } =
 				this._model.narrowDownLocations(items);
+
 			if (!locations && !testIds) return;
 
 			const result = await this._runGlobalHooksInServer(
@@ -385,18 +412,21 @@ export class PlaywrightTestServer {
 				reporter,
 				token,
 			);
+
 			if (result !== "passed") return;
 
 			// Locations are regular expressions.
 			const locationPatterns = locations
 				? locations.map(escapeRegex)
 				: undefined;
+
 			const options: Parameters<TestServerInterface["runTests"]>["0"] = {
 				projects: this._model.enabledProjectsFilter(),
 				locations: locationPatterns,
 				testIds,
 				...runOptions,
 			};
+
 			debugTestServer.runTests(options);
 
 			disposables.push(
@@ -404,6 +434,7 @@ export class PlaywrightTestServer {
 					debugTestServer!.stopTestsNoReply({});
 				}),
 			);
+
 			disposables.push(
 				debugTestServer.onStdio((params) => {
 					if (params.type === "stdout")
@@ -413,14 +444,17 @@ export class PlaywrightTestServer {
 						reporter.onStdErr?.(unwrapString(params));
 				}),
 			);
+
 			const testEndPromise = this._wireTestServer(
 				debugTestServer,
 				reporter,
 				token,
 			);
+
 			await testEndPromise;
 		} finally {
 			disposables.forEach((disposable) => disposable.dispose());
+
 			if (
 				!token.isCancellationRequested &&
 				debugTestServer &&
@@ -432,7 +466,9 @@ export class PlaywrightTestServer {
 					reporter,
 					token,
 				);
+
 			debugTestServer?.close();
+
 			await this._options.runHooks.onDidRunTests(true);
 		}
 	}
@@ -441,6 +477,7 @@ export class PlaywrightTestServer {
 		const testServer = await this._testServer();
 
 		if (!testServer) return;
+
 		await testServer.watch({ fileNames });
 	}
 
@@ -465,6 +502,7 @@ export class PlaywrightTestServer {
 
 	private _testServer() {
 		if (this._testServerPromise) return this._testServerPromise;
+
 		this._testServerPromise = this._createTestServer();
 
 		return this._testServerPromise;
@@ -496,9 +534,11 @@ export class PlaywrightTestServer {
 		if (!wsEndpoint) return null;
 
 		const testServer = new TestServerConnection(wsEndpoint);
+
 		testServer.onTestFilesChanged((params) =>
 			this._testFilesChanged(params.testFiles),
 		);
+
 		await testServer.initialize({
 			serializer: require.resolve("./oopReporter"),
 			interceptStdio: true,
@@ -507,6 +547,7 @@ export class PlaywrightTestServer {
 
 		return testServer;
 	}
+
 	private async _wireTestServer(
 		testServer: TestServerConnection,
 		reporter: reporterTypes.ReporterV2,
@@ -527,14 +568,18 @@ export class PlaywrightTestServer {
 						message.method !== "onEnd"
 					)
 						return;
+
 					teleReceiver.dispatch(message);
+
 					if (message.method === "onEnd") {
 						disposables.forEach((d) => d.dispose());
+
 						resolve();
 					}
 				}),
 				testServer.onClose(() => {
 					disposables.forEach((d) => d.dispose());
+
 					resolve();
 				}),
 			];
@@ -549,6 +594,7 @@ export class PlaywrightTestServer {
 
 	private _disposeTestServer() {
 		const testServer = this._testServerPromise;
+
 		this._testServerPromise = undefined;
 
 		if (testServer) testServer.then((server) => server?.close());
@@ -557,6 +603,7 @@ export class PlaywrightTestServer {
 
 function unwrapString(params: {
 	text?: string;
+
 	buffer?: string;
 }): string | Buffer {
 	return params.buffer

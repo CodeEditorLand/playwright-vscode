@@ -46,20 +46,31 @@ export type TestEntry = reporterTypes.TestCase | reporterTypes.Suite;
 
 export type TestProject = {
 	model: TestModel;
+
 	name: string;
+
 	suite: reporterTypes.Suite;
+
 	project: reporterTypes.FullProject;
+
 	isEnabled: boolean;
 };
 
 export type TestModelEmbedder = {
 	context: vscodeTypes.ExtensionContext;
+
 	settingsModel: SettingsModel;
+
 	runHooks: RunHooks;
+
 	isUnderTest: boolean;
+
 	playwrightTestLog: string[];
+
 	envProvider: () => NodeJS.ProcessEnv;
+
 	onStdOut: vscodeTypes.Event<string>;
+
 	requestWatchRun: (
 		files: string[],
 		testItems: vscodeTypes.TestItem[],
@@ -72,29 +83,49 @@ type Watch = {
 
 export class TestModel extends DisposableBase {
 	private _vscode: vscodeTypes.VSCode;
+
 	readonly config: TestConfig;
+
 	private _projects = new Map<string, TestProject>();
+
 	private _playwrightTest: PlaywrightTestCLI | PlaywrightTestServer;
+
 	private _watches = new Set<Watch>();
+
 	private _fileToSources: Map<string, string[]> = new Map();
+
 	private _sourceToFile: Map<string, string> = new Map();
+
 	isEnabled = false;
+
 	readonly tag: vscodeTypes.TestTag;
+
 	private _errorByFile = new MultiMap<string, reporterTypes.TestError>();
+
 	private _embedder: TestModelEmbedder;
+
 	private _filesWithListedTests = new Set<string>();
+
 	private _filesPendingListTests:
 		| {
 				files: Set<string>;
+
 				timer: NodeJS.Timeout;
+
 				promise: Promise<void>;
+
 				finishedCallback: () => void;
 		  }
 		| undefined;
+
 	private _ranGlobalSetup = false;
+
 	private _startedDevServer = false;
+
 	private _useLegacyCLIDriver: boolean;
+
 	private _collection: TestModelCollection;
+
 	private _traceViewer: TraceViewer | null = null;
 
 	constructor(
@@ -104,10 +135,15 @@ export class TestModel extends DisposableBase {
 		playwrightInfo: { cli: string; version: number },
 	) {
 		super();
+
 		this._vscode = collection.vscode;
+
 		this._embedder = collection.embedder;
+
 		this._collection = collection;
+
 		this.config = { ...playwrightInfo, workspaceFolder, configFile };
+
 		this._useLegacyCLIDriver = playwrightInfo.version < 1.44;
 
 		if (this._useLegacyCLIDriver)
@@ -116,12 +152,14 @@ export class TestModel extends DisposableBase {
 				this,
 				collection.embedder,
 			);
+
 		else
 			this._playwrightTest = new PlaywrightTestServer(
 				this._vscode,
 				this,
 				collection.embedder,
 			);
+
 		this.tag = new this._vscode.TestTag(this.config.configFile);
 
 		this.updateTraceViewer(false);
@@ -136,10 +174,12 @@ export class TestModel extends DisposableBase {
 
 	async _loadModelIfNeeded(configSettings: ConfigSettings | undefined) {
 		if (!this.isEnabled) return;
+
 		await this._listFiles();
 
 		if (configSettings) {
 			let firstProject = true;
+
 			for (const project of this.projects()) {
 				const projectSettings = configSettings.projects.find(
 					(p) => p.name === project.name,
@@ -147,7 +187,9 @@ export class TestModel extends DisposableBase {
 
 				if (projectSettings)
 					project.isEnabled = projectSettings.enabled;
+
 				else if (firstProject) project.isEnabled = true;
+
 				firstProject = false;
 			}
 		} else {
@@ -163,16 +205,27 @@ export class TestModel extends DisposableBase {
 
 	reset() {
 		clearTimeout(this._filesPendingListTests?.timer);
+
 		this._filesPendingListTests?.finishedCallback();
+
 		delete this._filesPendingListTests;
+
 		this._projects.clear();
+
 		this._fileToSources.clear();
+
 		this._sourceToFile.clear();
+
 		this._errorByFile.clear();
+
 		this._playwrightTest.reset();
+
 		this._watches.clear();
+
 		this._ranGlobalSetup = false;
+
 		this._traceViewer?.close();
+
 		this._traceViewer = null;
 	}
 
@@ -215,8 +268,10 @@ export class TestModel extends DisposableBase {
 
 		for (const project of this.enabledProjects()) {
 			const files = projectFiles(project);
+
 			for (const file of files.keys()) result.add(file);
 		}
+
 		return result;
 	}
 
@@ -227,10 +282,12 @@ export class TestModel extends DisposableBase {
 
 		try {
 			report = await this._playwrightTest.listFiles();
+
 			for (const project of report.projects)
 				project.files = project.files.map(
 					(f) => this._vscode.Uri.file(f).fsPath,
 				);
+
 			if (report.error?.location)
 				report.error.location.file = this._vscode.Uri.file(
 					report.error.location.file,
@@ -251,13 +308,16 @@ export class TestModel extends DisposableBase {
 
 		if (report.error?.location) {
 			this._errorByFile.set(report.error?.location.file, report.error);
+
 			this._collection._modelUpdated(this);
+
 			return;
 		}
 
 		// Resolve files to sources when using source maps.
 		for (const project of report.projects) {
 			const files: string[] = [];
+
 			for (const file of project.files)
 				files.push(
 					...(await resolveSourceMap(
@@ -266,7 +326,9 @@ export class TestModel extends DisposableBase {
 						this._sourceToFile,
 					)),
 				);
+
 			project.files = files;
+
 			this.config.testIdAttributeName = project.use?.testIdAttribute;
 		}
 
@@ -274,8 +336,11 @@ export class TestModel extends DisposableBase {
 
 		for (const projectReport of report.projects) {
 			projectsToKeep.add(projectReport.name);
+
 			let project = this._projects.get(projectReport.name);
+
 			if (!project) project = this._createProject(projectReport);
+
 			this._updateProjectFiles(project, projectReport);
 		}
 
@@ -289,6 +354,7 @@ export class TestModel extends DisposableBase {
 
 	private _createProject(projectReport: ProjectConfigWithFiles): TestProject {
 		const projectSuite = new TeleSuite(projectReport.name, "project");
+
 		projectSuite._project = {
 			dependencies: [],
 			grep: ".*",
@@ -313,6 +379,7 @@ export class TestModel extends DisposableBase {
 			project: projectSuite._project,
 			isEnabled: false,
 		};
+
 		this._projects.set(project.name, project);
 
 		return project;
@@ -328,11 +395,15 @@ export class TestModel extends DisposableBase {
 
 		for (const file of projectReport.files) {
 			filesToKeep.add(file);
+
 			const testFile = files.get(file);
+
 			if (!testFile) {
 				const testFile = new TeleSuite(file, "file");
+
 				testFile.location = { file, line: 0, column: 0 };
 				(testFile as any)[listFilesFlag] = true;
+
 				files.set(file, testFile);
 			}
 		}
@@ -340,6 +411,7 @@ export class TestModel extends DisposableBase {
 		for (const file of files.keys()) {
 			if (!filesToKeep.has(file)) files.delete(file);
 		}
+
 		project.suite.suites = [...files.values()];
 	}
 
@@ -362,8 +434,10 @@ export class TestModel extends DisposableBase {
 			const changedWithListedTests = changed.filter((f) =>
 				this._filesWithListedTests.has(f),
 			);
+
 			for (const c of changedWithListedTests)
 				this._filesWithListedTests.delete(c);
+
 			await this.ensureTests(changedWithListedTests);
 		}
 	}
@@ -384,11 +458,13 @@ export class TestModel extends DisposableBase {
 				if (!watch.include) {
 					// Everything is watched => add file.
 					files.push(testFile);
+
 					continue;
 				}
 
 				for (const include of watch.include) {
 					if (!include.uri) continue;
+
 					if (!enabledFiles.has(include.uri.fsPath)) continue;
 					// Folder is watched => add file.
 					if (testFile.startsWith(include.uri.fsPath + path.sep)) {
@@ -429,12 +505,16 @@ export class TestModel extends DisposableBase {
 
 		if (!this._filesPendingListTests) {
 			let finishedCallback!: () => void;
+
 			const promise = new Promise<void>((f) => (finishedCallback = f));
+
 			const files = new Set<string>();
 
 			const timer = setTimeout(async () => {
 				delete this._filesPendingListTests;
+
 				await this._listTests([...files]).catch((e) => console.log(e));
+
 				finishedCallback();
 			}, 100);
 
@@ -456,6 +536,7 @@ export class TestModel extends DisposableBase {
 		const errors: reporterTypes.TestError[] = [];
 
 		let rootSuite: reporterTypes.Suite | undefined;
+
 		await this._playwrightTest.listTests(
 			files,
 			{
@@ -468,6 +549,7 @@ export class TestModel extends DisposableBase {
 			},
 			new this._vscode.CancellationTokenSource().token,
 		);
+
 		this._updateProjects(rootSuite!.suites, files, errors);
 	}
 
@@ -486,14 +568,19 @@ export class TestModel extends DisposableBase {
 
 		for (const [projectName, project] of this._projects) {
 			const files = projectFiles(project);
+
 			const newProjectSuite = newProjectSuites.find(
 				(e) => e.project()!.name === projectName,
 			);
+
 			const filesToClear = new Set(requestedFiles);
+
 			for (const fileSuite of newProjectSuite?.suites || []) {
 				// Do not show partial results in suites with errors.
 				if (this._errorByFile.has(fileSuite.location!.file)) continue;
+
 				filesToClear.delete(fileSuite.location!.file);
+
 				files.set(fileSuite.location!.file, fileSuite);
 			}
 
@@ -502,17 +589,21 @@ export class TestModel extends DisposableBase {
 
 				if (fileSuite) {
 					fileSuite.suites = [];
+
 					fileSuite.tests = [];
 				}
 			}
+
 			project.suite.suites = [...files.values()];
 		}
+
 		this._collection._modelUpdated(this);
 	}
 
 	updateFromRunningProjects(projectSuites: reporterTypes.Suite[]) {
 		for (const projectSuite of projectSuites) {
 			const project = this._projects.get(projectSuite.project()!.name);
+
 			if (project) this._updateFromRunningProject(project, projectSuite);
 		}
 	}
@@ -526,12 +617,17 @@ export class TestModel extends DisposableBase {
 
 		for (const fileSuite of projectSuite.suites) {
 			if (!fileSuite.allTests().length) continue;
+
 			this._filesWithListedTests.add(fileSuite.location!.file);
+
 			const existingFileSuite = files.get(fileSuite.location!.file);
+
 			if (!existingFileSuite || !existingFileSuite.allTests().length)
 				files.set(fileSuite.location!.file, fileSuite);
 		}
+
 		project.suite.suites = [...files.values()];
+
 		this._collection._modelUpdated(this);
 	}
 
@@ -565,12 +661,15 @@ export class TestModel extends DisposableBase {
 
 		if (type === "setup") {
 			if (!this.canRunGlobalHooks("setup")) return "passed";
+
 			const status = await this._playwrightTest.runGlobalHooks(
 				"setup",
 				testListener,
 				token,
 			);
+
 			if (status === "passed") this._ranGlobalSetup = true;
+
 			return status;
 		}
 
@@ -581,6 +680,7 @@ export class TestModel extends DisposableBase {
 			testListener,
 			token,
 		);
+
 		this._ranGlobalSetup = false;
 
 		return status;
@@ -653,6 +753,7 @@ export class TestModel extends DisposableBase {
 		// were suddenly removed. So we disable tracing in this case.
 		if (this._embedder.settingsModel.showBrowser.get()) {
 			trace = "off";
+
 			video = "off";
 		}
 
@@ -669,6 +770,7 @@ export class TestModel extends DisposableBase {
 
 		try {
 			if (token?.isCancellationRequested) return;
+
 			await this._playwrightTest.runTests(
 				items,
 				options,
@@ -708,6 +810,7 @@ export class TestModel extends DisposableBase {
 
 		try {
 			if (token?.isCancellationRequested) return;
+
 			await this._playwrightTest.debugTests(
 				items,
 				options,
@@ -727,10 +830,14 @@ export class TestModel extends DisposableBase {
 
 		for (const file of files) {
 			if (!testDirs.some((t) => file.startsWith(t + path.sep))) continue;
+
 			const sources = this._fileToSources.get(file);
+
 			if (sources) sources.forEach((f) => result.add(f));
+
 			else result.add(file);
 		}
+
 		return [...result];
 	}
 
@@ -739,7 +846,9 @@ export class TestModel extends DisposableBase {
 		cancellationToken: vscodeTypes.CancellationToken,
 	) {
 		const watch: Watch = { include };
+
 		this._watches.add(watch);
+
 		cancellationToken.onCancellationRequested(() =>
 			this._watches.delete(watch),
 		);
@@ -766,16 +875,20 @@ export class TestModel extends DisposableBase {
 
 				continue;
 			}
+
 			for (const include of watch.include) {
 				if (!include.uri) continue;
+
 				filesToWatch.add(include.uri.fsPath);
 			}
 		}
+
 		await this._playwrightTest.watchFiles([...filesToWatch]);
 	}
 
 	narrowDownLocations(items: vscodeTypes.TestItem[]): {
 		locations: string[] | null;
+
 		testIds?: string[];
 	} {
 		if (!items.length) return { locations: [] };
@@ -786,6 +899,7 @@ export class TestModel extends DisposableBase {
 
 		for (const item of items) {
 			const treeItem = upstreamTreeItem(item);
+
 			if (
 				treeItem.kind === "group" &&
 				(treeItem.subKind === "folder" || treeItem.subKind === "file")
@@ -822,7 +936,9 @@ export class TestModel extends DisposableBase {
 			this._collection.selectedModel() !== this
 		) {
 			this._traceViewer?.close();
+
 			this._traceViewer = null;
+
 			return null;
 		}
 
@@ -860,24 +976,35 @@ export class TestModel extends DisposableBase {
 				),
 			);
 		}
+
 		return false;
 	}
 }
 
 export class TestModelCollection extends DisposableBase {
 	private _models: TestModel[] = [];
+
 	private _selectedConfigFile: string | undefined;
+
 	private _didUpdate: vscodeTypes.EventEmitter<void>;
+
 	readonly onUpdated: vscodeTypes.Event<void>;
+
 	readonly vscode: vscodeTypes.VSCode;
+
 	readonly embedder: TestModelEmbedder;
 
 	constructor(vscode: vscodeTypes.VSCode, embedder: TestModelEmbedder) {
 		super();
+
 		this.vscode = vscode;
+
 		this.embedder = embedder;
+
 		this._didUpdate = new vscode.EventEmitter();
+
 		this.onUpdated = this._didUpdate.event;
+
 		this._disposables = [this._didUpdate];
 	}
 
@@ -893,12 +1020,15 @@ export class TestModelCollection extends DisposableBase {
 		if (!model) return;
 
 		if (model.isEnabled === enabled) return;
+
 		model.isEnabled = enabled;
 
 		if (userGesture) this._saveSettings();
+
 		model.reset();
 
 		const configSettings = this._configSettings(model.config);
+
 		model
 			._loadModelIfNeeded(configSettings)
 			.then(() => this._didUpdate.fire());
@@ -916,8 +1046,11 @@ export class TestModelCollection extends DisposableBase {
 		if (!project) return;
 
 		if (project.isEnabled === enabled) return;
+
 		project.isEnabled = enabled;
+
 		this._saveSettings();
+
 		this._didUpdate.fire();
 	}
 
@@ -927,6 +1060,7 @@ export class TestModelCollection extends DisposableBase {
 		for (const model of this._models) {
 			for (const dir of model.testDirs()) result.add(dir);
 		}
+
 		return result;
 	}
 
@@ -941,13 +1075,17 @@ export class TestModelCollection extends DisposableBase {
 			configFile,
 			playwrightInfo,
 		);
+
 		this._models.push(model);
 
 		const configSettings = this._configSettings(model.config);
+
 		model.isEnabled =
 			configSettings?.enabled ||
 			(this._models.length === 1 && !configSettings);
+
 		await model._loadModelIfNeeded(configSettings);
+
 		this._didUpdate.fire();
 	}
 
@@ -988,7 +1126,9 @@ export class TestModelCollection extends DisposableBase {
 
 	clear() {
 		for (const model of this._models) model.dispose();
+
 		this._models = [];
+
 		this._didUpdate.fire();
 	}
 
@@ -1011,6 +1151,7 @@ export class TestModelCollection extends DisposableBase {
 
 		if (!enabledModels.length) {
 			this._selectedConfigFile = undefined;
+
 			return undefined;
 		}
 
@@ -1019,6 +1160,7 @@ export class TestModelCollection extends DisposableBase {
 		);
 
 		if (model) return model;
+
 		this._selectedConfigFile = enabledModels[0].config.configFile;
 
 		return enabledModels[0];
@@ -1026,7 +1168,9 @@ export class TestModelCollection extends DisposableBase {
 
 	selectModel(configFile: string) {
 		this._selectedConfigFile = configFile;
+
 		this._saveSettings();
+
 		this._didUpdate.fire();
 	}
 
@@ -1046,6 +1190,7 @@ export class TestModelCollection extends DisposableBase {
 					.map((p) => ({ name: p.name, enabled: p.isEnabled })),
 			});
 		}
+
 		this.embedder.context.workspaceState.update(
 			workspaceStateKey,
 			workspaceSettings,
@@ -1057,8 +1202,10 @@ export function projectFiles(
 	project: TestProject,
 ): Map<string, reporterTypes.Suite> {
 	const files = new Map<string, reporterTypes.Suite>();
+
 	for (const fileSuite of project.suite.suites)
 		files.set(fileSuite.location!.file, fileSuite);
+
 	return files;
 }
 
@@ -1070,7 +1217,9 @@ function isAncestorOf(
 ) {
 	while (descendent.parent) {
 		if (descendent.parent === root) return true;
+
 		descendent = descendent.parent;
 	}
+
 	return false;
 }

@@ -26,12 +26,16 @@ import * as vscodeTypes from "./vscodeTypes";
 
 export class ReporterServer {
 	private _clientSocketPromise: Promise<WebSocket>;
+
 	private _clientSocketCallback!: (socket: WebSocket) => void;
+
 	private _wsServer: WebSocketServer | undefined;
+
 	private _vscode: vscodeTypes.VSCode;
 
 	constructor(vscode: vscodeTypes.VSCode) {
 		this._vscode = vscode;
+
 		this._clientSocketPromise = new Promise(
 			(f) => (this._clientSocketCallback = f),
 		);
@@ -48,6 +52,7 @@ export class ReporterServer {
 
 	private async _listen(): Promise<string> {
 		const server = http.createServer((_, response) => response.end());
+
 		server.on("error", (error) => console.error(error));
 
 		const path = "/" + createGuid();
@@ -59,21 +64,26 @@ export class ReporterServer {
 
 					if (!address) {
 						reject(new Error("Could not bind server socket"));
+
 						return;
 					}
+
 					const wsEndpoint =
 						typeof address === "string"
 							? `${address}${path}`
 							: `ws://127.0.0.1:${address.port}${path}`;
+
 					resolve(wsEndpoint);
 				})
 				.on("error", reject);
 		});
 
 		const wsServer = new WebSocketServer({ server, path });
+
 		wsServer.on("connection", async (socket) =>
 			this._clientSocketCallback(socket),
 		);
+
 		this._wsServer = wsServer;
 
 		return wsEndpoint;
@@ -97,6 +107,7 @@ export class ReporterServer {
 			if (!transport.isClosed()) {
 				try {
 					transport.send({ id: 0, method: "stop", params: {} });
+
 					timeout = setTimeout(() => transport.close(), 30000);
 				} catch {
 					// Close in case we are getting an error or close is racing back from remote.
@@ -119,7 +130,9 @@ export class ReporterServer {
 		transport.onmessage = (message) => {
 			if (token.isCancellationRequested && message.method !== "onEnd")
 				return;
+
 			if (message.method === "onEnd") transport.close();
+
 			teleReceiver.dispatch(message as any);
 		};
 
@@ -136,6 +149,7 @@ export class ReporterServer {
 			new Promise<"cancellationRequested">((f) =>
 				token.onCancellationRequested(() => {
 					this._close();
+
 					f("cancellationRequested");
 				}),
 			),
@@ -158,6 +172,7 @@ export class ReporterServer {
 
 			close: () => {
 				socket.close();
+
 				this._wsServer?.close();
 			},
 		};
@@ -165,12 +180,16 @@ export class ReporterServer {
 		socket.on("message", (message: string) => {
 			transport.onmessage?.(JSON.parse(Buffer.from(message).toString()));
 		});
+
 		socket.on("close", () => {
 			this._wsServer?.close();
+
 			transport.onclose?.();
 		});
+
 		socket.on("error", () => {
 			this._wsServer?.close();
+
 			transport.onclose?.();
 		});
 

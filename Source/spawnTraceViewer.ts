@@ -23,10 +23,15 @@ import * as vscodeTypes from "./vscodeTypes";
 
 export class SpawnTraceViewer implements TraceViewer {
 	private _vscode: vscodeTypes.VSCode;
+
 	private _envProvider: () => NodeJS.ProcessEnv;
+
 	private _traceViewerProcess: ChildProcess | undefined;
+
 	private _currentFile?: string;
+
 	private _config: TestConfig;
+
 	private _serverUrlPrefixForTest?: string;
 
 	constructor(
@@ -35,7 +40,9 @@ export class SpawnTraceViewer implements TraceViewer {
 		config: TestConfig,
 	) {
 		this._vscode = vscode;
+
 		this._envProvider = envProvider;
+
 		this._config = config;
 	}
 
@@ -51,7 +58,9 @@ export class SpawnTraceViewer implements TraceViewer {
 		this._currentFile = file;
 
 		if (!file && !this._traceViewerProcess) return;
+
 		await this._startIfNeeded();
+
 		this._traceViewerProcess?.stdin?.write(file + "\n");
 	}
 
@@ -64,8 +73,10 @@ export class SpawnTraceViewer implements TraceViewer {
 
 		if (this._vscode.env.remoteName) {
 			allArgs.push("--host", "0.0.0.0");
+
 			allArgs.push("--port", "0");
 		}
+
 		const traceViewerProcess = spawn(node, allArgs, {
 			cwd: this._config.workspaceFolder,
 			stdio: "pipe",
@@ -75,19 +86,26 @@ export class SpawnTraceViewer implements TraceViewer {
 				...this._envProvider(),
 			},
 		});
+
 		this._traceViewerProcess = traceViewerProcess;
 
 		const pipeLog = (data: Buffer) => {
 			if (!this._vscode.isUnderTest) console.log(data.toString());
 		};
+
 		traceViewerProcess.stdout?.on("data", pipeLog);
+
 		traceViewerProcess.stderr?.on("data", pipeLog);
+
 		traceViewerProcess.on("exit", () => {
 			this._traceViewerProcess = undefined;
+
 			this._currentFile = undefined;
 		});
+
 		traceViewerProcess.on("error", (error) => {
 			this._vscode.window.showErrorMessage(error.message);
+
 			this.close();
 		});
 
@@ -102,8 +120,11 @@ export class SpawnTraceViewer implements TraceViewer {
 
 	close() {
 		this._traceViewerProcess?.stdin?.end();
+
 		this._traceViewerProcess = undefined;
+
 		this._currentFile = undefined;
+
 		this._serverUrlPrefixForTest = undefined;
 	}
 

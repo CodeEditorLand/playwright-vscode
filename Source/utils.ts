@@ -38,9 +38,11 @@ export function stripAnsi(str: string): string {
 
 export function stripBabelFrame(text: string) {
 	const result: string[] = [];
+
 	for (const line of text.split("\n")) {
 		if (!line.trim().match(/>?\s*\d*\s*\|/)) result.push(line);
 	}
+
 	return result.join("\n").trim();
 }
 
@@ -55,10 +57,14 @@ export async function spawnAsync(
 		cwd,
 		env: { ...process.env, ...settingsEnv },
 	});
+
 	let output = "";
+
 	childProcess.stdout.on("data", (data) => (output += data.toString()));
+
 	return new Promise<string>((f, r) => {
 		childProcess.on("error", (error) => r(error));
+
 		childProcess.on("exit", () => f(output));
 	});
 }
@@ -69,7 +75,9 @@ export async function resolveSourceMap(
 	sourceToFile: Map<string, string>,
 ): Promise<string[]> {
 	if (!file.endsWith(".js")) return [file];
+
 	const cached = fileToSources.get(file);
+
 	if (cached) return cached;
 
 	const rl = readline.createInterface({
@@ -78,9 +86,11 @@ export async function resolveSourceMap(
 	});
 
 	let lastLine: string | undefined;
+
 	rl.on("line", (line) => {
 		lastLine = line;
 	});
+
 	await new Promise((f) => rl.on("close", f));
 
 	if (lastLine?.startsWith("//# sourceMappingURL=")) {
@@ -94,18 +104,25 @@ export async function resolveSourceMap(
 				sourceMappingFile,
 				"utf-8",
 			);
+
 			const sources = JSON.parse(sourceMapping).sources;
+
 			const sourcePaths = sources.map((s: string) => {
 				const source = path.resolve(path.dirname(sourceMappingFile), s);
+
 				sourceToFile.set(source, file);
 
 				return source;
 			});
+
 			fileToSources.set(file, sourcePaths);
+
 			return sourcePaths;
 		} catch (e) {}
 	}
+
 	fileToSources.set(file, [file]);
+
 	return [file];
 }
 
@@ -124,16 +141,20 @@ export async function findNode(
 	// Stage 2: When extension host boots, it does not have the right env set, so we might need to wait.
 	for (let i = 0; i < 5 && !node; ++i) {
 		await new Promise((f) => setTimeout(f, 200));
+
 		node = await which("node").catch((e) => undefined);
 	}
 	// Stage 3: If we still haven't found Node.js, try to find it via a subprocess.
 	// This evaluates shell rc/profile files and makes nvm work.
 	node ??= await findNodeViaShell(vscode, cwd);
+
 	if (!node)
 		throw new NodeJSNotFoundError(
 			`Unable to find 'node' executable.\nMake sure to have Node.js installed and available in your PATH.\nCurrent PATH: '${process.env.PATH}'.`,
 		);
+
 	pathToNodeJS = node;
+
 	return node;
 }
 
@@ -142,6 +163,7 @@ async function findNodeViaShell(
 	cwd: string,
 ): Promise<string | undefined> {
 	if (process.platform === "win32") return undefined;
+
 	return new Promise<string | undefined>((resolve) => {
 		const startToken = "___START_PW_SHELL__";
 
@@ -157,13 +179,20 @@ async function findNodeViaShell(
 		);
 
 		let output = "";
+
 		childProcess.stdout.on("data", (data) => (output += data.toString()));
+
 		childProcess.on("error", () => resolve(undefined));
+
 		childProcess.on("exit", (exitCode) => {
 			if (exitCode !== 0) return resolve(undefined);
+
 			const start = output.indexOf(startToken);
+
 			const end = output.indexOf(endToken);
+
 			if (start === -1 || end === -1) return resolve(undefined);
+
 			return resolve(
 				output.substring(start + startToken.length, end).trim(),
 			);
@@ -198,13 +227,19 @@ export async function getPlaywrightInfo(
 		path.dirname(configFilePath),
 		env,
 	);
+
 	const { version, cli, error } = JSON.parse(pwtInfo) as {
 		version: number;
+
 		cli: string;
+
 		error?: string;
 	};
+
 	if (error) throw new Error(error);
+
 	let cliOverride = cli;
+
 	if (
 		cli.includes("/playwright/packages/playwright-test/") &&
 		configFilePath.includes("playwright-test")
@@ -213,14 +248,18 @@ export async function getPlaywrightInfo(
 			workspaceFolder,
 			"tests/playwright-test/stable-test-runner/node_modules/@playwright/test/cli.js",
 		);
+
 	return { cli: cliOverride, version };
 }
 
 export function getNonce() {
 	let text = "";
+
 	const possible =
 		"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
 	for (let i = 0; i < 32; i++)
 		text += possible.charAt(Math.floor(Math.random() * possible.length));
+
 	return text;
 }

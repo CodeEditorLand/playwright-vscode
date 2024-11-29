@@ -18,32 +18,44 @@ import WebSocket from "ws";
 
 export type ProtocolRequest = {
 	id: number;
+
 	method: string;
+
 	params: any;
 };
 
 export type ProtocolResponse = {
 	id?: number;
+
 	method?: string;
+
 	error?: { message: string; data: any };
+
 	params?: any;
+
 	result?: any;
 };
 
 export interface ConnectionTransport {
 	send(s: ProtocolRequest): void;
+
 	close(): void; // Note: calling close is expected to issue onclose at some point.
 	isClosed(): boolean;
+
 	onmessage?: (message: ProtocolResponse) => void;
+
 	onclose?: () => void;
 }
 
 export class PipeTransport implements ConnectionTransport {
 	private _pipeWrite: NodeJS.WritableStream;
+
 	private _pendingMessage = "";
+
 	private _closed = false;
 
 	onmessage?: (message: ProtocolResponse) => void;
+
 	onclose?: () => void;
 
 	constructor(
@@ -51,12 +63,17 @@ export class PipeTransport implements ConnectionTransport {
 		pipeRead: NodeJS.ReadableStream,
 	) {
 		this._pipeWrite = pipeWrite;
+
 		pipeRead.on("data", (buffer) => this._dispatch(buffer));
+
 		pipeRead.on("close", () => {
 			this._closed = true;
+
 			if (this.onclose) this.onclose.call(null);
 		});
+
 		this.onmessage = undefined;
+
 		this.onclose = undefined;
 	}
 
@@ -66,6 +83,7 @@ export class PipeTransport implements ConnectionTransport {
 
 	send(message: ProtocolRequest) {
 		if (this._closed) throw new Error("Pipe has been closed");
+
 		this._pipeWrite.write(JSON.stringify(message) + "\0");
 	}
 
@@ -78,22 +96,29 @@ export class PipeTransport implements ConnectionTransport {
 
 		if (end === -1) {
 			this._pendingMessage += buffer.toString();
+
 			return;
 		}
+
 		const message =
 			this._pendingMessage + buffer.toString(undefined, 0, end);
 
 		if (this.onmessage) this.onmessage.call(null, JSON.parse(message));
 
 		let start = end + 1;
+
 		end = buffer.indexOf("\0", start);
 
 		while (end !== -1) {
 			const message = buffer.toString(undefined, start, end);
+
 			if (this.onmessage) this.onmessage.call(null, JSON.parse(message));
+
 			start = end + 1;
+
 			end = buffer.indexOf("\0", start);
 		}
+
 		this._pendingMessage = buffer.toString(undefined, start);
 	}
 }
@@ -102,7 +127,9 @@ export class WebSocketTransport implements ConnectionTransport {
 	private _ws: WebSocket;
 
 	onmessage?: (message: ProtocolResponse) => void;
+
 	onclose?: () => void;
+
 	readonly wsEndpoint: string;
 
 	static async connect(
@@ -110,12 +137,15 @@ export class WebSocketTransport implements ConnectionTransport {
 		headers: Record<string, string> = {},
 	): Promise<WebSocketTransport> {
 		const transport = new WebSocketTransport(url, headers);
+
 		await new Promise<WebSocketTransport>((fulfill, reject) => {
 			transport._ws.addEventListener("open", async () => {
 				fulfill(transport);
 			});
+
 			transport._ws.addEventListener("error", (event) => {
 				reject(new Error("WebSocket error: " + event.message));
+
 				transport._ws.close();
 			});
 		});
@@ -125,6 +155,7 @@ export class WebSocketTransport implements ConnectionTransport {
 
 	constructor(url: string, headers: Record<string, string> = {}) {
 		this.wsEndpoint = url;
+
 		this._ws = new WebSocket(url, [], {
 			perMessageDeflate: false,
 			maxPayload: 256 * 1024 * 1024, // 256Mb,
@@ -168,7 +199,9 @@ export class WebSocketTransport implements ConnectionTransport {
 
 	async closeAndWait() {
 		const promise = new Promise((f) => this._ws.once("close", f));
+
 		this.close();
+
 		await promise; // Make sure to await the actual disconnect.
 	}
 }

@@ -20,15 +20,21 @@ import * as vscodeTypes from "./vscodeTypes";
 
 export type WorkspaceChange = {
 	created: Set<string>;
+
 	changed: Set<string>;
+
 	deleted: Set<string>;
 };
 
 export class WorkspaceObserver {
 	private _vscode: vscodeTypes.VSCode;
+
 	private _handler: (change: WorkspaceChange) => void;
+
 	private _pendingChange: WorkspaceChange | undefined;
+
 	private _timeout: NodeJS.Timeout | undefined;
+
 	private _folderWatchers = new Map<string, vscodeTypes.Disposable[]>();
 
 	constructor(
@@ -36,6 +42,7 @@ export class WorkspaceObserver {
 		handler: (change: WorkspaceChange) => void,
 	) {
 		this._vscode = vscode;
+
 		this._handler = handler;
 	}
 
@@ -46,6 +53,7 @@ export class WorkspaceObserver {
 			const watcher = this._vscode.workspace.createFileSystemWatcher(
 				folder + path.sep + "**",
 			);
+
 			const disposables: vscodeTypes.Disposable[] = [
 				watcher.onDidCreate((uri) => {
 					if (uri.scheme === "file")
@@ -61,12 +69,14 @@ export class WorkspaceObserver {
 				}),
 				watcher,
 			];
+
 			this._folderWatchers.set(folder, disposables);
 		}
 
 		for (const [folder, disposables] of this._folderWatchers) {
 			if (!folders.has(folder)) {
 				disposables.forEach((d) => d.dispose());
+
 				this._folderWatchers.delete(folder);
 			}
 		}
@@ -80,7 +90,9 @@ export class WorkspaceObserver {
 				deleted: new Set(),
 			};
 		}
+
 		if (this._timeout) clearTimeout(this._timeout);
+
 		this._timeout = setTimeout(() => this._reportChange(), 50);
 
 		return this._pendingChange;
@@ -88,7 +100,9 @@ export class WorkspaceObserver {
 
 	private _reportChange() {
 		delete this._timeout;
+
 		this._handler(this._pendingChange!);
+
 		this._pendingChange = undefined;
 	}
 
@@ -97,6 +111,7 @@ export class WorkspaceObserver {
 
 		for (const disposables of this._folderWatchers.values())
 			disposables.forEach((d) => d.dispose());
+
 		this._folderWatchers.clear();
 	}
 }

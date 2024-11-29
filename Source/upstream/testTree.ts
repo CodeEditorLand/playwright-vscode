@@ -32,34 +32,51 @@ export type TestItemStatus =
 
 export type TreeItemBase = {
 	kind: "root" | "group" | "case" | "test";
+
 	id: string;
+
 	title: string;
+
 	location: reporterTypes.Location;
+
 	duration: number;
+
 	parent: TreeItem | undefined;
+
 	children: TreeItem[];
+
 	status: TestItemStatus;
 };
 
 export type GroupItem = TreeItemBase & {
 	kind: "group";
+
 	subKind: "folder" | "file" | "describe";
+
 	hasLoadErrors: boolean;
+
 	children: (TestCaseItem | GroupItem)[];
 };
 
 export type TestCaseItem = TreeItemBase & {
 	kind: "case";
+
 	tests: reporterTypes.TestCase[];
+
 	children: TestItem[];
+
 	test: reporterTypes.TestCase | undefined;
+
 	project: reporterTypes.FullProject | undefined;
+
 	tags: Array<string>;
 };
 
 export type TestItem = TreeItemBase & {
 	kind: "test";
+
 	test: reporterTypes.TestCase;
+
 	project: reporterTypes.FullProject;
 };
 
@@ -67,8 +84,11 @@ export type TreeItem = GroupItem | TestCaseItem | TestItem;
 
 export class TestTree {
 	rootItem: GroupItem;
+
 	private _treeItemById = new Map<string, TreeItem>();
+
 	private _treeItemByTestId = new Map<string, TestItem | TestCaseItem>();
+
 	readonly pathSeparator: string;
 
 	constructor(
@@ -80,7 +100,9 @@ export class TestTree {
 	) {
 		const filterProjects =
 			projectFilters && [...projectFilters.values()].some(Boolean);
+
 		this.pathSeparator = pathSeparator;
+
 		this.rootItem = {
 			kind: "group",
 			subKind: "folder",
@@ -93,6 +115,7 @@ export class TestTree {
 			status: "none",
 			hasLoadErrors: false,
 		};
+
 		this._treeItemById.set(rootFolder, this.rootItem);
 
 		const visitSuite = (
@@ -124,8 +147,10 @@ export class TestTree {
 						status: "none",
 						hasLoadErrors: false,
 					};
+
 					this._addChild(parentGroup, group);
 				}
+
 				visitSuite(project, suite, group);
 			}
 
@@ -151,6 +176,7 @@ export class TestTree {
 						test: undefined,
 						tags: test.tags,
 					};
+
 					this._addChild(parentGroup, testCaseItem);
 				}
 
@@ -166,12 +192,17 @@ export class TestTree {
 
 				if ((result as any)?.[statusEx] === "scheduled")
 					status = "scheduled";
+
 				else if ((result as any)?.[statusEx] === "running")
 					status = "running";
+
 				else if (result?.status === "skipped") status = "skipped";
+
 				else if (result?.status === "interrupted") status = "none";
+
 				else if (result && test.outcome() !== "expected")
 					status = "failed";
+
 				else if (result && test.outcome() === "expected")
 					status = "passed";
 
@@ -191,8 +222,11 @@ export class TestTree {
 						: 0,
 					project,
 				};
+
 				this._addChild(testCaseItem, testItem);
+
 				this._treeItemByTestId.set(test.id, testItem);
+
 				testCaseItem.duration = (
 					testCaseItem.children as TestItem[]
 				).reduce((a, b) => a + b.duration, 0);
@@ -202,28 +236,34 @@ export class TestTree {
 		for (const projectSuite of rootSuite?.suites || []) {
 			if (filterProjects && !projectFilters.get(projectSuite.title))
 				continue;
+
 			for (const fileSuite of projectSuite.suites) {
 				const fileItem = this._fileItem(
 					fileSuite.location!.file.split(pathSeparator),
 					true,
 				);
+
 				visitSuite(projectSuite.project()!, fileSuite, fileItem);
 			}
 		}
 
 		for (const loadError of loadErrors) {
 			if (!loadError.location) continue;
+
 			const fileItem = this._fileItem(
 				loadError.location.file.split(pathSeparator),
 				true,
 			);
+
 			fileItem.hasLoadErrors = true;
 		}
 	}
 
 	private _addChild(parent: TreeItem, child: TreeItem) {
 		parent.children.push(child);
+
 		child.parent = parent;
+
 		this._treeItemById.set(child.id, child);
 	}
 
@@ -243,11 +283,13 @@ export class TestTree {
 			]
 				.join(" ")
 				.toLowerCase();
+
 			if (
 				!tokens.every((token) => titleWithTags.includes(token)) &&
 				!testCase.tests.some((t) => runningTestIds?.has(t.id))
 			)
 				return false;
+
 			testCase.children = (testCase.children as TestItem[]).filter(
 				(test) => {
 					return (
@@ -257,25 +299,31 @@ export class TestTree {
 					);
 				},
 			);
+
 			testCase.tests = (testCase.children as TestItem[]).map(
 				(c) => c.test,
 			);
+
 			return !!testCase.children.length;
 		};
 
 		const visit = (treeItem: GroupItem) => {
 			const newChildren: (GroupItem | TestCaseItem)[] = [];
+
 			for (const child of treeItem.children) {
 				if (child.kind === "case") {
 					if (filter(child)) newChildren.push(child);
 				} else {
 					visit(child);
+
 					if (child.children.length || child.hasLoadErrors)
 						newChildren.push(child);
 				}
 			}
+
 			treeItem.children = newChildren;
 		};
+
 		visit(this.rootItem);
 	}
 
@@ -305,6 +353,7 @@ export class TestTree {
 			status: "none",
 			hasLoadErrors: false,
 		};
+
 		this._addChild(parentFileItem, fileItem);
 
 		return fileItem;
@@ -318,13 +367,17 @@ export class TestTree {
 		const visit = (treeItem: TreeItem) => {
 			if (treeItem.kind === "case" && treeItem.children.length === 1) {
 				treeItem.project = treeItem.children[0].project;
+
 				treeItem.test = treeItem.children[0].test;
+
 				treeItem.children = [];
+
 				this._treeItemByTestId.set(treeItem.test.id, treeItem);
 			} else {
 				treeItem.children.forEach(visit);
 			}
 		};
+
 		visit(this.rootItem);
 	}
 
@@ -337,7 +390,9 @@ export class TestTree {
 			shortRoot.children[0].subKind === "folder"
 		)
 			shortRoot = shortRoot.children[0];
+
 		shortRoot.location = this.rootItem.location;
+
 		this.rootItem = shortRoot;
 	}
 
@@ -347,8 +402,10 @@ export class TestTree {
 		const visit = (treeItem: TreeItem) => {
 			if (treeItem.kind === "case")
 				treeItem.tests.forEach((t) => result.add(t.id));
+
 			treeItem.children.forEach(visit);
 		};
+
 		visit(this.rootItem);
 
 		return result;
@@ -360,8 +417,10 @@ export class TestTree {
 		const visit = (treeItem: TreeItem) => {
 			if (treeItem.kind === "group" && treeItem.subKind === "file")
 				result.add(treeItem.id);
+
 			else treeItem.children.forEach(visit);
 		};
+
 		visit(this.rootItem);
 
 		return [...result];
@@ -372,8 +431,10 @@ export class TestTree {
 
 		const visit = (treeItem: TreeItem) => {
 			result.push(treeItem);
+
 			treeItem.children.forEach(visit);
 		};
+
 		visit(this.rootItem);
 
 		return result;
@@ -394,42 +455,60 @@ export function sortAndPropagateStatus(treeItem: TreeItem) {
 	if (treeItem.kind === "group") {
 		treeItem.children.sort((a, b) => {
 			const fc = a.location.file.localeCompare(b.location.file);
+
 			return fc || a.location.line - b.location.line;
 		});
 	}
 
 	let allPassed = treeItem.children.length > 0;
+
 	let allSkipped = treeItem.children.length > 0;
+
 	let hasFailed = false;
+
 	let hasRunning = false;
+
 	let hasScheduled = false;
 
 	for (const child of treeItem.children) {
 		allSkipped = allSkipped && child.status === "skipped";
+
 		allPassed =
 			allPassed &&
 			(child.status === "passed" || child.status === "skipped");
+
 		hasFailed = hasFailed || child.status === "failed";
+
 		hasRunning = hasRunning || child.status === "running";
+
 		hasScheduled = hasScheduled || child.status === "scheduled";
 	}
 
 	if (hasRunning) treeItem.status = "running";
+
 	else if (hasScheduled) treeItem.status = "scheduled";
+
 	else if (hasFailed) treeItem.status = "failed";
+
 	else if (allSkipped) treeItem.status = "skipped";
+
 	else if (allPassed) treeItem.status = "passed";
 }
 
 export function collectTestIds(treeItem: TreeItem): Set<string> {
 	const testIds = new Set<string>();
+
 	const visit = (treeItem: TreeItem) => {
 		if (treeItem.kind === "case")
 			treeItem.tests.map((t) => t.id).forEach((id) => testIds.add(id));
+
 		else if (treeItem.kind === "test") testIds.add(treeItem.id);
+
 		else treeItem.children?.forEach(visit);
 	};
+
 	visit(treeItem);
+
 	return testIds;
 }
 

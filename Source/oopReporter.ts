@@ -30,13 +30,16 @@ class TeleReporter extends TeleReporterEmitter {
 			const transport = WebSocketTransport.connect(
 				process.env.PW_TEST_REPORTER_WS_ENDPOINT!,
 			);
+
 			transport.then((t) => {
 				t.onmessage = (message) => {
 					if (message.method === "stop")
 						process.emit("SIGINT" as any);
 				};
+
 				t.onclose = () => process.exit(0);
 			});
+
 			messageSink = (message) => {
 				transport.then((t) => t.send(message));
 			};
@@ -45,7 +48,9 @@ class TeleReporter extends TeleReporterEmitter {
 				console.log(message);
 			};
 		}
+
 		super(messageSink, { omitBuffers: true, omitOutput: true });
+
 		this._hasSender = !!options?._send;
 	}
 

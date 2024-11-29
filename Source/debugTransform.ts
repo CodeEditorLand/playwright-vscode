@@ -42,6 +42,7 @@ export default declare((api) => {
 					!t.isCallExpression(expression.argument)
 				)
 					return;
+
 				path.replaceWith(
 					t.tryStatement(
 						t.blockStatement([path.node]),
@@ -59,8 +60,11 @@ export default declare((api) => {
 
 				// Patch source map.
 				path.node.start = expression.start;
+
 				path.node.end = expression.end;
+
 				path.node.loc = expression.loc;
+
 				path.node.range = expression.range;
 			},
 		},

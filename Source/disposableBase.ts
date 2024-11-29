@@ -21,6 +21,7 @@ export class DisposableBase implements vscodeTypes.Disposable {
 
 	dispose() {
 		for (const d of this._disposables) d.dispose();
+
 		this._disposables = [];
 	}
 }

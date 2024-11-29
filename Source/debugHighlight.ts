@@ -25,21 +25,32 @@ export type DebuggerError = { error: string; location: Location };
 
 export class DebugHighlight {
 	private _debugSessions = new Map<string, vscodeTypes.DebugSession>();
+
 	private _onErrorInDebuggerEmitter: vscodeTypes.EventEmitter<DebuggerError>;
+
 	readonly onErrorInDebugger: vscodeTypes.Event<DebuggerError>;
+
 	private _onStdOutEmitter: vscodeTypes.EventEmitter<string>;
+
 	readonly onStdOut: vscodeTypes.Event<string>;
+
 	private _disposables: vscodeTypes.Disposable[] = [];
+
 	private _reusedBrowser: ReusedBrowser;
 
 	constructor(vscode: vscodeTypes.VSCode, reusedBrowser: ReusedBrowser) {
 		this._reusedBrowser = reusedBrowser;
+
 		this._onErrorInDebuggerEmitter = new vscode.EventEmitter();
+
 		this.onErrorInDebugger = this._onErrorInDebuggerEmitter.event;
+
 		this._onStdOutEmitter = new vscode.EventEmitter();
+
 		this.onStdOut = this._onStdOutEmitter.event;
 
 		const self = this;
+
 		this._disposables = [
 			this._onErrorInDebuggerEmitter,
 			this._onStdOutEmitter,
@@ -49,17 +60,20 @@ export class DebugHighlight {
 			}),
 			vscode.debug.onDidTerminateDebugSession((session) => {
 				this._debugSessions.delete(session.id);
+
 				self._hideHighlight();
 			}),
 			vscode.languages.registerHoverProvider("typescript", {
 				provideHover(document, position, token) {
 					self._highlightLocator(document, position, token).catch();
+
 					return null;
 				},
 			}),
 			vscode.languages.registerHoverProvider("javascript", {
 				provideHover(document, position, token) {
 					self._highlightLocator(document, position, token).catch();
+
 					return null;
 				},
 			}),
@@ -81,6 +95,7 @@ export class DebugHighlight {
 					if (!isPlaywrightSession(session)) return {};
 
 					let lastCatchLocation: Location | undefined;
+
 					return {
 						onDidSendMessage: async (message) => {
 							if (
@@ -89,10 +104,13 @@ export class DebugHighlight {
 							) {
 								if (message.body.category === "stdout") {
 									const output = message.body.output;
+
 									self._onStdOutEmitter.fire(output);
 								}
 							}
+
 							if (!message.success) return;
+
 							if (
 								message.command === "scopes" &&
 								message.type === "response"
@@ -125,6 +143,7 @@ export class DebugHighlight {
 
 								if (errorVariable && lastCatchLocation) {
 									const error = errorVariable.value as string;
+
 									self._onErrorInDebuggerEmitter.fire({
 										error: error.replace(/\\n/g, "\n"),
 										location: lastCatchLocation!,
@@ -153,6 +172,7 @@ export class DebugHighlight {
 		);
 
 		if (result) this._reusedBrowser.highlight(result);
+
 		else this._hideHighlight();
 	}
 
@@ -162,14 +182,18 @@ export class DebugHighlight {
 
 	dispose() {
 		for (const d of this._disposables) d?.dispose?.();
+
 		this._disposables = [];
 	}
 }
 
 export type StackFrame = {
 	id: string;
+
 	line: number;
+
 	column: number;
+
 	source?: { path: string };
 };
 
@@ -223,6 +247,7 @@ async function locatorToHighlight(
 			// just fine.
 			return match[1];
 		}
+
 		return;
 	}
 
@@ -235,11 +260,17 @@ async function locatorToHighlight(
 
 		for (const stackFrame of stackFrames) {
 			if (!stackFrame.source) continue;
+
 			const sourcePath = mapRemoteToLocalPath(stackFrame.source.path);
+
 			if (!sourcePath || document.uri.fsPath !== sourcePath) continue;
+
 			if (token?.isCancellationRequested) return;
+
 			const vars = await scopeVariables(session, stackFrame);
+
 			const text = document.getText();
+
 			const locatorExpression = locatorForSourcePosition(
 				text,
 				vars,
@@ -249,13 +280,17 @@ async function locatorToHighlight(
 					column: position.character + 1,
 				},
 			);
+
 			if (!locatorExpression) continue;
+
 			if (token?.isCancellationRequested) return;
+
 			const result = await computeLocatorForHighlight(
 				session,
 				stackFrame.id,
 				locatorExpression,
 			);
+
 			if (result) return result;
 		}
 	}
@@ -269,6 +304,7 @@ async function pausedStackFrames(
 		(result) => result,
 		() => ({ threads: [] }),
 	);
+
 	for (const thread of threads) {
 		if (threadId !== undefined && thread.id !== threadId) continue;
 
@@ -279,6 +315,7 @@ async function pausedStackFrames(
 					(result) => result,
 					() => ({ stackFrames: [] }),
 				);
+
 			return stackFrames;
 		} catch {
 			continue;
@@ -291,16 +328,20 @@ async function scopeVariables(
 	stackFrame: StackFrame,
 ): Promise<{
 	pages: string[];
+
 	locators: string[];
 }> {
 	const pages: string[] = [];
+
 	const locators: string[] = [];
+
 	const { scopes } = await session
 		.customRequest("scopes", { frameId: stackFrame.id })
 		.then(
 			(result) => result,
 			() => ({ scopes: [] }),
 		);
+
 	for (const scope of scopes) {
 		if (scope.name === "Global") continue;
 
@@ -316,10 +357,12 @@ async function scopeVariables(
 
 		for (const variable of variables) {
 			if (variable.value.startsWith("Page ")) pages.push(variable.name);
+
 			if (variable.value.startsWith("Locator "))
 				locators.push(variable.name);
 		}
 	}
+
 	return { pages, locators };
 }
 
@@ -329,9 +372,13 @@ async function computeLocatorForHighlight(
 	locatorExpression: string,
 ): Promise<string> {
 	const innerExpression = `(${locatorExpression})._selector`;
+
 	const base64Encoded = Buffer.from(innerExpression).toString("base64");
+
 	const expression = `eval(Buffer.from("${base64Encoded}", "base64").toString())`;
+
 	sessionsWithHighlight.add(session);
+
 	return await session
 		.customRequest("evaluate", {
 			expression,
@@ -357,7 +404,9 @@ export function pruneHighlightCaches(fsPathsToRetain: string[]) {
 
 function isPlaywrightSession(session: vscodeTypes.DebugSession): boolean {
 	let rootSession = session;
+
 	while (rootSession.parentSession) rootSession = rootSession.parentSession;
+
 	return rootSession.name === debugSessionName;
 }
 
@@ -367,6 +416,7 @@ function isPlaywrightSession(session: vscodeTypes.DebugSession): boolean {
  */
 function mapRemoteToLocalPath(maybeRemoteUri?: string): string | undefined {
 	if (!maybeRemoteUri) return;
+
 	if (maybeRemoteUri.startsWith("vscode-remote://")) {
 		const decoded = decodeURIComponent(maybeRemoteUri.substring(16));
 
@@ -374,5 +424,6 @@ function mapRemoteToLocalPath(maybeRemoteUri?: string): string | undefined {
 
 		return decoded.slice(separator, decoded.length);
 	}
+
 	return maybeRemoteUri;
 }

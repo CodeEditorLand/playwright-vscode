@@ -19,13 +19,17 @@ import * as vscodeTypes from "./vscodeTypes";
 
 export type ProjectSettings = {
 	name: string;
+
 	enabled: boolean;
 };
 
 export type ConfigSettings = {
 	relativeConfigFile: string;
+
 	projects: ProjectSettings[];
+
 	enabled: boolean;
+
 	selected: boolean;
 };
 
@@ -37,12 +41,19 @@ export const workspaceStateKey = "pw.workspace-settings";
 
 export class SettingsModel extends DisposableBase {
 	private _vscode: vscodeTypes.VSCode;
+
 	private _settings = new Map<string, Setting<any>>();
+
 	private _context: vscodeTypes.ExtensionContext;
+
 	readonly onChange: vscodeTypes.Event<void>;
+
 	private _onChange: vscodeTypes.EventEmitter<void>;
+
 	showBrowser: Setting<boolean>;
+
 	showTrace: Setting<boolean>;
+
 	runGlobalSetupOnEachRun: Setting<boolean>;
 
 	constructor(
@@ -50,13 +61,19 @@ export class SettingsModel extends DisposableBase {
 		context: vscodeTypes.ExtensionContext,
 	) {
 		super();
+
 		this._vscode = vscode;
+
 		this._context = context;
+
 		this._onChange = new vscode.EventEmitter();
+
 		this.onChange = this._onChange.event;
 
 		this.showBrowser = this._createSetting("reuseBrowser");
+
 		this.showTrace = this._createSetting("showTrace");
+
 		this.runGlobalSetupOnEachRun = this._createSetting(
 			"runGlobalSetupOnEachRun",
 		);
@@ -87,6 +104,7 @@ export class SettingsModel extends DisposableBase {
 			this._context.workspaceState.update(workspaceStateKey, {
 				configs: workspaceSettings.configs,
 			});
+
 			this._vscode.workspace
 				.getConfiguration("playwright")
 				.update("workspaceSettings", undefined);
@@ -95,8 +113,11 @@ export class SettingsModel extends DisposableBase {
 
 	private _createSetting<T>(settingName: string): Setting<T> {
 		const setting = new PersistentSetting<T>(this._vscode, settingName);
+
 		this._disposables.push(setting);
+
 		this._disposables.push(setting.onChange(() => this._onChange.fire()));
+
 		this._settings.set(settingName, setting);
 
 		return setting;
@@ -114,23 +135,33 @@ export class SettingsModel extends DisposableBase {
 
 export interface Setting<T> extends vscodeTypes.Disposable {
 	readonly onChange: vscodeTypes.Event<T>;
+
 	get(): T;
+
 	set(value: T): Promise<void>;
 }
 
 class SettingBase<T> extends DisposableBase implements Setting<T> {
 	readonly settingName: string;
+
 	readonly onChange: vscodeTypes.Event<T>;
+
 	protected _onChange: vscodeTypes.EventEmitter<T>;
+
 	protected _vscode: vscodeTypes.VSCode;
 
 	constructor(vscode: vscodeTypes.VSCode, settingName: string) {
 		super();
+
 		this._vscode = vscode;
+
 		this.settingName = settingName;
+
 		this._onChange = new vscode.EventEmitter<T>();
+
 		this.onChange = this._onChange.event;
 	}
+
 	get(): T {
 		throw new Error("Method not implemented.");
 	}
@@ -145,6 +176,7 @@ class PersistentSetting<T> extends SettingBase<T> {
 		super(vscode, settingName);
 
 		const settingFQN = `playwright.${settingName}`;
+
 		this._disposables = [
 			this._onChange,
 			vscode.workspace.onDidChangeConfiguration((event) => {
