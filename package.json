@@ -127,7 +127,7 @@
 	"description": "%description%",
 	"devDependencies": {
 		"@types/glob": "8.1.0",
-		"@types/node": "22.10.0",
+		"@types/node": "22.10.1",
 		"@types/stack-utils": "2.0.3",
 		"@types/which": "3.0.4",
 		"@types/ws": "8.5.13",
