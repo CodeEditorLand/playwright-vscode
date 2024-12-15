@@ -86,7 +86,6 @@ export class TestTree extends DisposableBase {
 	finishedLoading() {
 		if (this._loadingItem.parent)
 			this._loadingItem.parent.children.delete(this._loadingItem.id);
-
 		else if (this._testController.items.get(this._loadingItem.id))
 			this._testController.items.delete(this._loadingItem.id);
 	}
@@ -106,7 +105,6 @@ export class TestTree extends DisposableBase {
 				treeItem.test
 			)
 				result.push(testItem);
-
 			else testItem.children.forEach(visitItem);
 		};
 

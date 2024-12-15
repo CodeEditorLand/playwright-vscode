@@ -172,7 +172,6 @@ export class DebugHighlight {
 		);
 
 		if (result) this._reusedBrowser.highlight(result);
-
 		else this._hideHighlight();
 	}
 

@@ -340,7 +340,6 @@ export class ReusedBrowser implements vscodeTypes.Disposable {
 
 		this._updateOrCancelInspecting = (params) => {
 			if (params.cancel) selectorExplorerBox.dispose();
-
 			else if (params.selector)
 				selectorExplorerBox.value = params.selector;
 		};
@@ -440,7 +439,6 @@ export class ReusedBrowser implements vscodeTypes.Disposable {
 		let editor: vscodeTypes.TextEditor | undefined;
 
 		if (recordNew) editor = await this._createFileForNewTest(model);
-
 		else editor = this._vscode.window.activeTextEditor;
 
 		await startBackend;
@@ -662,7 +660,6 @@ function showExceptionAsUserError(
 ) {
 	if (error.message.includes("Looks like Playwright Test or Playwright"))
 		installBrowsers(vscode, model);
-
 	else vscode.window.showErrorMessage(error.message);
 }
 

@@ -152,7 +152,6 @@ export async function installBrowsers(
 			`npx playwright ${installCommand} ${args.join(" ")}`,
 			true,
 		);
-
 	else if (result.includes(installDepsItem))
 		terminal.sendText(`npx playwright install-deps`, true);
 }

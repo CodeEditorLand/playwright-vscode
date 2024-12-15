@@ -392,7 +392,6 @@ export class TeleReporterReceiver {
 		const step = new TeleTestStep(payload, parentStep, location);
 
 		if (parentStep) parentStep.steps.push(step);
-
 		else result.steps.push(step);
 
 		result._stepMap.set(payload.id, step);
@@ -648,7 +647,6 @@ export class TeleSuite implements reporterTypes.Suite {
 		const visit = (suite: TeleSuite) => {
 			for (const entry of [...suite.suites, ...suite.tests]) {
 				if (entry instanceof TeleSuite) visit(entry);
-
 				else result.push(entry);
 			}
 		};

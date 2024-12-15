@@ -192,17 +192,12 @@ export class TestTree {
 
 				if ((result as any)?.[statusEx] === "scheduled")
 					status = "scheduled";
-
 				else if ((result as any)?.[statusEx] === "running")
 					status = "running";
-
 				else if (result?.status === "skipped") status = "skipped";
-
 				else if (result?.status === "interrupted") status = "none";
-
 				else if (result && test.outcome() !== "expected")
 					status = "failed";
-
 				else if (result && test.outcome() === "expected")
 					status = "passed";
 
@@ -417,7 +412,6 @@ export class TestTree {
 		const visit = (treeItem: TreeItem) => {
 			if (treeItem.kind === "group" && treeItem.subKind === "file")
 				result.add(treeItem.id);
-
 			else treeItem.children.forEach(visit);
 		};
 
@@ -485,13 +479,9 @@ export function sortAndPropagateStatus(treeItem: TreeItem) {
 	}
 
 	if (hasRunning) treeItem.status = "running";
-
 	else if (hasScheduled) treeItem.status = "scheduled";
-
 	else if (hasFailed) treeItem.status = "failed";
-
 	else if (allSkipped) treeItem.status = "skipped";
-
 	else if (allPassed) treeItem.status = "passed";
 }
 
@@ -501,9 +491,7 @@ export function collectTestIds(treeItem: TreeItem): Set<string> {
 	const visit = (treeItem: TreeItem) => {
 		if (treeItem.kind === "case")
 			treeItem.tests.map((t) => t.id).forEach((id) => testIds.add(id));
-
 		else if (treeItem.kind === "test") testIds.add(treeItem.id);
-
 		else treeItem.children?.forEach(visit);
 	};
 

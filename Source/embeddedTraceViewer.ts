@@ -269,10 +269,8 @@ class EmbeddedTraceViewerPanel extends DisposableBase {
 			// should be a Uri, but due to https://github.com/microsoft/vscode/issues/85930
 			// we pass a string instead
 			await this._vscode.env.openExternal(params.url);
-
 		else if (method === "openSourceLocation" && params)
 			await this._openSourceFile(params);
-
 		else if (method === "showErrorMessage")
 			await this._vscode.window.showErrorMessage(params.message);
 	}

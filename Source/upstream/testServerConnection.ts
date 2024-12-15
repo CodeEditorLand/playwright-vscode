@@ -108,7 +108,6 @@ export class TestServerConnection
 				this._callbacks.delete(id);
 
 				if (error) callback.reject(new Error(error));
-
 				else callback.resolve(result);
 			} else {
 				this._dispatchEvent(method, params);
@@ -163,15 +162,11 @@ export class TestServerConnection
 
 	private _dispatchEvent(method: string, params?: any) {
 		if (method === "report") this._onReportEmitter.fire(params);
-
 		else if (method === "stdio") this._onStdioEmitter.fire(params);
-
 		else if (method === "listChanged")
 			this._onListChangedEmitter.fire(params);
-
 		else if (method === "testFilesChanged")
 			this._onTestFilesChangedEmitter.fire(params);
-
 		else if (method === "loadTraceRequested")
 			this._onLoadTraceRequestedEmitter.fire(params);
 	}

@@ -141,7 +141,6 @@ export function locatorForSourcePosition(
 
 				if (pageSelectorNode)
 					expression = `${pageSelectorCallee}.locator(${text.substring(pageSelectorNode.start!, pageSelectorNode.end!)})`;
-
 				else
 					expression = text.substring(
 						expressionNode.start!,
