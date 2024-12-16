@@ -4,6 +4,7 @@
   "Can't record while running tests": "Can't record while running tests",
   "Clear cache": "Clear cache",
   "Close all browsers": "Close all browsers",
+  "Locator": "Locator",
   "No Playwright tests found.": "No Playwright tests found.",
   "Pick locator": "Pick locator",
   "Playwright Test v{0} or newer is required": "Playwright Test v{0} or newer is required",
@@ -23,5 +24,7 @@
   "Stop dev server": "Stop dev server",
   "this feature": "this feature",
   "Toggle Playwright Configs": "Toggle Playwright Configs",
+  "Update snapshots:": "Update snapshots:",
+  "Update method:" : "Update method:",
   "When enabled, Playwright will reuse the browser instance between tests. This will disable parallel execution.": "When enabled, Playwright will reuse the browser instance between tests. This will disable parallel execution."
 }

@@ -4,6 +4,7 @@
   "Can't record while running tests": "Non e' possibile registrare mentre si eseguono i test",
   "Clear cache": "Pulire la cache",
   "Close all browsers": "Chiudere tutti i browser",
+  "Locator": "Locator",
   "No Playwright tests found.": "0 Playwright test trovati.",
   "Pick locator": "Seleziona il locator",
   "Playwright Test v{0} or newer is required": "Playwright Test v{0} o una piu' recenbte e' richiesta",
@@ -23,5 +24,7 @@
   "Stop dev server": "Ferma dev server",
   "this feature": "questo feature",
   "Toggle Playwright Configs": "Attiva/disattiva Playwright Configs",
+  "Update snapshots:": "Aggiorna snapshots:",
+  "Update method:" : "Aggiorna metodo:",
   "When enabled, Playwright will reuse the browser instance between tests. This will disable parallel execution.": "Quando attivata, Playwright riusa l'instanza browser tra i test. Questo disattiva l'esecuzione parallela."
 }

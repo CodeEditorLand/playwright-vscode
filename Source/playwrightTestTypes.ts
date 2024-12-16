@@ -30,17 +30,14 @@ export type TestConfig = {
 };
 
 export type PlaywrightTestRunOptions = {
-	headed?: boolean;
-
-	workers?: string | number;
-
-	trace?: "on" | "off";
-
-	video?: "on" | "off";
-
-	reuseContext?: boolean;
-
-	connectWsEndpoint?: string;
+  headed?: boolean;
+  workers?: string | number;
+  trace?: 'on' | 'off';
+  video?: 'on' | 'off';
+  reuseContext?: boolean;
+  connectWsEndpoint?: string;
+  updateSnapshots?: 'all' | 'changed' | 'missing' | 'none';
+  updateSourceMethod?: 'overwrite' | 'patch' | '3way';
 };
 
 export interface RunHooks {
