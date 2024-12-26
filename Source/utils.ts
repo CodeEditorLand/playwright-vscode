@@ -120,7 +120,7 @@ async function findNodeViaShell(vscode: vscodeTypes.VSCode, cwd: string): Promis
     const endToken = '___END_PW_SHELL__';
     // NVM lazily loads Node.js when 'node' alias is invoked. In order to invoke it, we run 'node --version' if 'node' is a function.
     // See https://github.com/microsoft/playwright/issues/33996
-    const childProcess = spawn(`${vscode.env.shell} -i -c 'if type node 2>/dev/null | grep -q "function"; then node --version; fi; echo ${startToken} && which node && echo ${endToken}'`, {
+    const childProcess = spawn(`${vscode.env.shell} -i -c 'if [[ $(type node 2>/dev/null) == *function* ]]; then node --version; fi; echo ${startToken} && which node && echo ${endToken}'`, {
       stdio: 'pipe',
       shell: true,
       cwd,
@@ -169,4 +169,9 @@ export function getNonce() {
   for (let i = 0; i < 32; i++)
     text += possible.charAt(Math.floor(Math.random() * possible.length));
   return text;
+}
+
+// this is a no-op template tag. it instructs the "bierner.lit-html" vscode extension to highlight the string as HTML.
+export function html(strings: TemplateStringsArray, ...expressions: unknown[]) {
+  return strings.reduce((acc, str, i) => acc + expressions[i - 1] + str);
 }
