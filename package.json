@@ -169,19 +169,19 @@
 		"workspaceContains:**/*playwright*.config.{ts,js,mjs}"
 	],
 	"dependencies": {
-		"@babel/plugin-proposal-decorators": "^7.24.7",
+		"@babel/plugin-proposal-decorators": "^7.25.9",
 		"stack-utils": "^2.0.6",
-		"which": "^4.0.0",
-		"ws": "^8.17.1"
+		"which": "^5.0.0",
+		"ws": "^8.18.0"
 	},
 	"devDependencies": {
-		"@types/glob": "^8.0.0",
-		"@types/node": "^18.11.9",
-		"@types/stack-utils": "^2.0.1",
-		"@types/which": "^3.0.3",
-		"@types/ws": "^8.5.3",
-		"esbuild": "^0.23.1",
-		"glob": "^8.0.3",
+		"@types/glob": "^8.1.0",
+		"@types/node": "^22.10.6",
+		"@types/stack-utils": "^2.0.3",
+		"@types/which": "^3.0.4",
+		"@types/ws": "^8.5.13",
+		"esbuild": "^0.24.2",
+		"glob": "^11.0.1",
 		"minimatch": "^10.0.1"
 	},
 	"icon": "images/playwright-logo.png",
