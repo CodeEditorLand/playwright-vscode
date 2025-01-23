@@ -176,10 +176,10 @@
 	},
 	"devDependencies": {
 		"@types/glob": "8.1.0",
-		"@types/node": "22.10.9",
+		"@types/node": "22.10.10",
 		"@types/stack-utils": "2.0.3",
 		"@types/which": "3.0.4",
-		"@types/ws": "8.5.13",
+		"@types/ws": "8.5.14",
 		"esbuild": "0.24.2",
 		"glob": "11.0.1",
 		"minimatch": "10.0.1"
